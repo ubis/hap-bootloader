@@ -1,3 +1,0 @@
-/home/ubis/openblt-openblt_v010600/Host/Source/LibOpenBLT/build/CMakeFiles/rebuild_cache.dir
-/home/ubis/openblt-openblt_v010600/Host/Source/LibOpenBLT/build/CMakeFiles/openblt_shared.dir
-/home/ubis/openblt-openblt_v010600/Host/Source/LibOpenBLT/build/CMakeFiles/edit_cache.dir

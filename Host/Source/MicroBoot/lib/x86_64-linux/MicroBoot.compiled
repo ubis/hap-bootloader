@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<CONFIG>
-  <Compiler Value="/usr/bin/fpc" Date="1535575190"/>
-  <Params Value=" -MObjFPC -Scghi -CX -Cg -O3 -XX  -k-R -k./ -l -vewnhibq -vm5058,5036 -Fi/home/ubis/openblt-openblt_v010600/Host/Source/MicroBoot/lib/x86_64-linux -Fu/home/ubis/openblt-openblt_v010600/Host/Source/LibOpenBLT/bindings/pascal -Fu/home/ubis/openblt-openblt_v010600/Host -Fu/usr/lib/lazarus/1.8.2/lcl/units/x86_64-linux/gtk2 -Fu/usr/lib/lazarus/1.8.2/lcl/units/x86_64-linux -Fu/usr/lib/lazarus/1.8.2/components/lazutils/lib/x86_64-linux -Fu/usr/lib/lazarus/1.8.2/packager/units/x86_64-linux -Fu/home/ubis/openblt-openblt_v010600/Host/Source/MicroBoot/ -FU/home/ubis/openblt-openblt_v010600/Host/Source/MicroBoot/lib/x86_64-linux/ -FE/home/ubis/openblt-openblt_v010600/Host/ -dLCL -dLCLgtk2 -dUseCThreads MicroBoot.lpr"/>
-</CONFIG>
