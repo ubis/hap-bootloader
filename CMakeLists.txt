@@ -1,95 +1,147 @@
 cmake_minimum_required(VERSION 3.14)
-SET(CMAKE_SYSTEM_NAME Generic)
+set(CMAKE_SYSTEM_NAME Generic)
 
 # Project name
 set(PROJECT_NAME HAPBoot)
 PROJECT(${PROJECT_NAME} C ASM)
 
-###################### CHIP CONFIGURATION ##########################
-SET(ROOT_PROJ   ${CMAKE_CURRENT_SOURCE_DIR})
-SET(CPU         "cortex-m3")
-SET(ARCH_NAME   "arm")
-SET(FAMILY      "stm32f3")
-SET(CHIP        "STM32F303xC")
-####################################################################
+#------------------------------------------------------------------------------#
+# 			    Compiler configuration
+#------------------------------------------------------------------------------#
+
+# Chip Configuration
+set(ROOT_PROJ 	${CMAKE_CURRENT_SOURCE_DIR})
+set(CPU 	"cortex-m3")
+set(ARCH_NAME 	"arm")
+set(FAMILY 	"ARMCM3_STM32F1")
+set(CHIP 	"STM32F10x")
+set(HEAP_SIZE 	0x0800)
+set(STACK_SIZE 	0x0800)
 
 # Toolchain path
-set(TOOLCHAIN_PATH  "")
+set(TOOLCHAIN_PATH "")
 
-SET(CMAKE_C_COMPILER    ${TOOLCHAIN_PATH}arm-none-eabi-gcc)
-set(OBJCOPY             ${TOOLCHAIN_PATH}arm-none-eabi-objcopy)
-set(OBJDUMP             ${TOOLCHAIN_PATH}arm-none-eabi-objdump)
+SET(CMAKE_C_COMPILER 	${TOOLCHAIN_PATH}arm-none-eabi-gcc)
+set(OBJCOPY 		${TOOLCHAIN_PATH}arm-none-eabi-objcopy)
+set(OBJDUMP 		${TOOLCHAIN_PATH}arm-none-eabi-objdump)
 set(CMAKE_ASM_COMPILER 	${TOOLCHAIN_PATH}arm-none-eabi-gcc)
-set(SIZE                ${TOOLCHAIN_PATH}arm-none-eabi-size)
+set(SIZE 		${TOOLCHAIN_PATH}arm-none-eabi-size)
 
-# Definitions passed at compile time (#defines)
-add_definitions(-DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER -DVECT_TAB_FLASH -DGCC_ARMCM3)
-add_definitions(-D__HEAP_SIZE=0x0800 -D__STACK_SIZE=0x0800)
+# Definitions
+add_definitions(
+	-DSTM32F10X_MD
+	-DUSE_STDPERIPH_DRIVER
+	-DVECT_TAB_FLASH
+	-DGCC_ARMCM3
+	-D__HEAP_SIZE=${HEAP_SIZE}
+	-D__STACK_SIZE=${STACK_SIZE}
+)
 
 # Compilation flags
-add_compile_options(-mcpu=${CPU})
-add_compile_options(-mthumb)
-add_compile_options(-fno-strict-aliasing -Wno-maybe-uninitialized)
-add_compile_options(-fdata-sections -ffunction-sections -Wall -g3)
-add_compile_options(-Og)
-# Only for debugging
+add_compile_options(
+	-mcpu=${CPU}		# set target cpu
+	-mthumb 		# use T32 instruction set
+	-fno-strict-aliasing 	# no strict aliasing rules
+	-fdata-sections	 	# place data into own section
+	-ffunction-sections 	# place func into own section
+	-Wall 			# show all warnings
+	-Os 			# optimize for size
+)
 
-# Linker script path
+#------------------------------------------------------------------------------#
+# 				Project sources
+#------------------------------------------------------------------------------#
+
+# Linker script
 file(GLOB_RECURSE LINKER_SCRIPT src/stm32f103rb_flash.ld)
 
-################################## Source code ###############################################################
-# Retrieve all sources # "platforms/${FAMILY}/Startup/*.s"
+# All source files
 file(GLOB SOURCES
 	"src/*.c"
 	"src/*.S"
-	"openblt/Target/Source/*.c"
-	"openblt/Target/Source/ARMCM3_STM32F1/*.c"
-	"openblt/Target/Source/ARMCM3_STM32F1/GCC/*.c"
+
 	"lib/STM32F10x_StdPeriph_Driver/src/*.c"
 	"lib/newlib/*.c"
 	"lib/CMSIS/CM3/CoreSupport/*.c"
-	"lib/CMSIS/CM3/DeviceSupport/ST/STM32F10x/*.c")
-#Retrieve all locations of headers
+	"lib/CMSIS/CM3/DeviceSupport/ST/${CHIP}/*.c"
+
+	"openblt/Target/Source/*.c"
+	"openblt/Target/Source/${FAMILY}/*.c"
+	"openblt/Target/Source/${FAMILY}/GCC/*.c"
+)
+
+# All header files
 file(GLOB_RECURSE HEADERS
 	"src/*.h"
-	"openblt/Target/Source/*.h"
-	"openblt/Target/Source/ARMCM3_STM32F1/*.h"
-	"openblt/Target/Source/ARMCM3_STM32F1/GCC/*.h"
+
 	"lib/STM32F10x_StdPeriph_Driver/inc/*.h"
 	"lib/STM32F10x_StdPeriph_Driver/*.h"
 	"lib/CMSIS/CM3/CoreSupport/*.h"
-	"lib/CMSIS/CM3/DeviceSupport/ST/STM32F10x/*.h")
-set (INCLUDE_DIRS "")
+	"lib/CMSIS/CM3/DeviceSupport/ST/${CHIP}/*.h"
+
+	"openblt/Target/Source/*.h"
+	"openblt/Target/Source/${FAMILY}/*.h"
+	"openblt/Target/Source/${FAMILY}/GCC/*.h"
+)
+
+# Remove flash_layout.c from the sources to prevent compilation
 list(REMOVE_ITEM SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/flash_layout.c)
+
+set (INCLUDE_DIRS "")
+
+# Add all header folders
 foreach (_headerFile ${HEADERS})
-    get_filename_component(_dir ${_headerFile} PATH)
-    list (APPEND INCLUDE_DIRS ${_dir})
+	get_filename_component(_dir ${_headerFile} PATH)
+	list (APPEND INCLUDE_DIRS ${_dir})
 endforeach()
+
+# Remove duplicated directories
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
+
+# Include all folders
 include_directories(${INCLUDE_DIRS})
-#link_directories(${ARM_LIB})
-################################## Source code END ###########################################################
 
+#------------------------------------------------------------------------------#
+# 			     Linker configuration
+#------------------------------------------------------------------------------#
+
+# Set output firmware name
 set(EXE_NAME "${PROJECT_NAME}_${CHIP}")
+string(TOLOWER ${EXE_NAME} EXE_NAME)
+
+# Create elf executable
 add_executable(${EXE_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
-get_directory_property(defs COMPILE_OPTIONS)
-set(CMAKE_EXE_LINKER_FLAGS "-mcpu=${CPU} -mthumb -fno-strict-aliasing -Wno-maybe-uninitialized -fdata-sections -ffunction-sections -Wall -g3 -Og -Wl,--defsym=__HEAP_SIZE=0x0800 -Wl,--defsym=__STACK_SIZE=0x0800 -Wl,-script=${LINKER_SCRIPT} -Wl,-Map=${PROJECT_BINARY_DIR}/${PROJECT_NAME}.map -specs=nano.specs -Wl,--gc-sections")
 
-# Libs and external dependencies
-target_link_libraries(${EXE_NAME}.elf)
+# Set linker flags
+set(CMAKE_EXE_LINKER_FLAGS
+	-mcpu=${CPU}
+	-Wl,--defsym=__HEAP_SIZE=${HEAP_SIZE}
+	-Wl,--defsym=__STACK_SIZE=${STACK_SIZE}
+	-Wl,-script=${LINKER_SCRIPT}
+	-specs=nano.specs
+	-Wl,--gc-sections
+)
 
-# Outputs
+# ';' is appended in linker flags so replace with empty space
+string(REPLACE ";" " " CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+
+#------------------------------------------------------------------------------#
+# 			     Build configuration
+#------------------------------------------------------------------------------#
+
+# Set output file names
 set(ELF_FILE ${PROJECT_BINARY_DIR}/${EXE_NAME}.elf)
-set(HEX_FILE ${PROJECT_BINARY_DIR}/${EXE_NAME}.hex)
 set(BIN_FILE ${PROJECT_BINARY_DIR}/${EXE_NAME}.bin)
+set(HEX_FILE ${PROJECT_BINARY_DIR}/${EXE_NAME}.hex)
 
+# Set build command
 add_custom_command(TARGET "${EXE_NAME}.elf" POST_BUILD
-        # Build .hex and .bin files
-        COMMAND ${OBJCOPY} -Obinary ${ELF_FILE} ${BIN_FILE}
-        COMMAND ${OBJCOPY} -Oihex  ${ELF_FILE} ${HEX_FILE}
-        COMMENT "Building ${PROJECT_NAME}.bin and ${PROJECT_NAME}.hex"
+	COMMENT "Building bootloader..."
 
-        # Display sizes
-        COMMAND ${SIZE} -B -d ${EXE_NAME}.elf
-        COMMENT "Invoking: Cross ARM GNU Print Size"
+	# Build .hex and .bin files
+	COMMAND ${OBJCOPY} -Obinary ${ELF_FILE} ${BIN_FILE}
+	COMMAND ${OBJCOPY} -Oihex  ${ELF_FILE} ${HEX_FILE}
+
+	# Display size
+	COMMAND ${SIZE} -B -d ${EXE_NAME}.elf
 )
