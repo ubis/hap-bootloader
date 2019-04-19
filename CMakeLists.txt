@@ -29,10 +29,8 @@ set(SIZE 		${TOOLCHAIN_PATH}arm-none-eabi-size)
 
 # Definitions
 add_definitions(
-	-DSTM32F10X_MD
-	-DUSE_STDPERIPH_DRIVER
+	-DSTM32F1
 	-DVECT_TAB_FLASH
-	-DGCC_ARMCM3
 	-D__HEAP_SIZE=${HEAP_SIZE}
 	-D__STACK_SIZE=${STACK_SIZE}
 )
@@ -55,15 +53,16 @@ add_compile_options(
 # Linker script
 file(GLOB_RECURSE LINKER_SCRIPT src/stm32f103rb_flash.ld)
 
+# Set libOpenCM3 path
+set(LIBOPENCM3_DIR ${CMAKE_SOURCE_DIR}/libopencm3)
+
+# Build libOpenCM3
+add_custom_target(libopencm3 ALL make WORKING_DIRECTORY ${LIBOPENCM3_DIR})
+
 # All source files
 file(GLOB SOURCES
 	"src/*.c"
 	"src/*.S"
-
-	"lib/STM32F10x_StdPeriph_Driver/src/*.c"
-	"lib/newlib/*.c"
-	"lib/CMSIS/CM3/CoreSupport/*.c"
-	"lib/CMSIS/CM3/DeviceSupport/ST/${CHIP}/*.c"
 
 	"openblt/Target/Source/*.c"
 	"openblt/Target/Source/${FAMILY}/*.c"
@@ -73,11 +72,6 @@ file(GLOB SOURCES
 # All header files
 file(GLOB_RECURSE HEADERS
 	"src/*.h"
-
-	"lib/STM32F10x_StdPeriph_Driver/inc/*.h"
-	"lib/STM32F10x_StdPeriph_Driver/*.h"
-	"lib/CMSIS/CM3/CoreSupport/*.h"
-	"lib/CMSIS/CM3/DeviceSupport/ST/${CHIP}/*.h"
 
 	"openblt/Target/Source/*.h"
 	"openblt/Target/Source/${FAMILY}/*.h"
@@ -99,7 +93,10 @@ endforeach()
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
 
 # Include all folders
-include_directories(${INCLUDE_DIRS})
+include_directories(
+	${INCLUDE_DIRS}
+	${LIBOPENCM3_DIR}/include
+)
 
 #------------------------------------------------------------------------------#
 # 			     Linker configuration
@@ -109,12 +106,18 @@ include_directories(${INCLUDE_DIRS})
 set(EXE_NAME "${PROJECT_NAME}_${CHIP}")
 string(TOLOWER ${EXE_NAME} EXE_NAME)
 
+# Link libopenCM3
+link_directories(${LIBOPENCM3_DIR}/lib)
+
 # Create elf executable
 add_executable(${EXE_NAME}.elf ${SOURCES} ${LINKER_SCRIPT})
+
+target_link_libraries(${EXE_NAME}.elf opencm3_stm32f1)
 
 # Set linker flags
 set(CMAKE_EXE_LINKER_FLAGS
 	-mcpu=${CPU}
+	-nostartfiles
 	-Wl,--defsym=__HEAP_SIZE=${HEAP_SIZE}
 	-Wl,--defsym=__STACK_SIZE=${STACK_SIZE}
 	-Wl,-script=${LINKER_SCRIPT}
@@ -136,7 +139,7 @@ set(HEX_FILE ${PROJECT_BINARY_DIR}/${EXE_NAME}.hex)
 
 # Set build command
 add_custom_command(TARGET "${EXE_NAME}.elf" POST_BUILD
-	COMMENT "Building bootloader..."
+	COMMENT "Generating bootloader image..."
 
 	# Build .hex and .bin files
 	COMMAND ${OBJCOPY} -Obinary ${ELF_FILE} ${BIN_FILE}
