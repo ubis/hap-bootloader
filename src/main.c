@@ -1,182 +1,122 @@
-/************************************************************************************//**
-* \file         Demo\ARMCM3_STM32F1_Nucleo_F103RB_GCC\Boot\main.c
-* \brief        Bootloader application source file.
-* \ingroup      Boot_ARMCM3_STM32F1_Nucleo_F103RB_GCC
-* \internal
-*----------------------------------------------------------------------------------------
-*                          C O P Y R I G H T
-*----------------------------------------------------------------------------------------
-*   Copyright (c) 2012  by Feaser    http://www.feaser.com    All rights reserved
-*
-*----------------------------------------------------------------------------------------
-*                            L I C E N S E
-*----------------------------------------------------------------------------------------
-* This file is part of OpenBLT. OpenBLT is free software: you can redistribute it and/or
-* modify it under the terms of the GNU General Public License as published by the Free
-* Software Foundation, either version 3 of the License, or (at your option) any later
-* version.
-*
-* OpenBLT is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-* PURPOSE. See the GNU General Public License for more details.
-*
-* You have received a copy of the GNU General Public License along with OpenBLT. It 
-* should be located in ".\Doc\license.html". If not, contact Feaser to obtain a copy.
-*
-* \endinternal
-****************************************************************************************/
+/*
+ *		      HAP-Bootoader, based on OpenBLT
+ *
+ *	@author		Jokubas Maciulaitis (ubis)
+ *	@file		main.c
+ *	@date		2019 04 19
+ */
 
-/****************************************************************************************
-* Include files
-****************************************************************************************/
-#include "boot.h"                                /* bootloader generic header          */
-#include "stm32f10x.h"                           /* microcontroller registers          */
+#include <boot.h>
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/usart.h>
 
+static blt_int16u ledBlinkIntervalMs;
 
-/****************************************************************************************
-* Function prototypes
-****************************************************************************************/
-static void Init(void);
+static void cpu_init(void)
+{
+	rcc_clock_setup_in_hse_8mhz_out_72mhz();
 
+	rcc_periph_clock_enable(RCC_AFIO);
+	rcc_periph_clock_enable(RCC_USART1);
+	rcc_periph_clock_enable(RCC_CAN1);
 
-/************************************************************************************//**
-** \brief     This is the entry point for the bootloader application and is called
-**            by the reset interrupt vector after the C-startup routines executed.
-** \return    Program return code.
-**
-****************************************************************************************/
+	rcc_periph_clock_enable(RCC_GPIOA);
+	rcc_periph_clock_enable(RCC_GPIOB);
+	rcc_periph_clock_enable(RCC_GPIOC);
+
+	// UART TX
+	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
+		      GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO9);
+	// UART RX
+	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
+		      GPIO_CNF_INPUT_FLOAT, GPIO10);
+
+	// CAN RX
+	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
+		      GPIO_CNF_INPUT_FLOAT, GPIO11);
+
+	// CAN TX
+	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
+		      GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO12);
+
+	// Status LED
+	gpio_set_mode(GPIOC, GPIO_MODE_OUTPUT_50_MHZ,
+		      GPIO_CNF_OUTPUT_PUSHPULL, GPIO13);
+
+	// Error LED
+	gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_50_MHZ,
+		      GPIO_CNF_OUTPUT_PUSHPULL, GPIO5);
+
+	// Turn on both LEDs
+	gpio_set(GPIOC, GPIO13);
+	gpio_set(GPIOB, GPIO5);
+
+	// Setup USART
+	usart_set_baudrate(USART1, BOOT_CONSOLE_UART_BAUDRATE);
+	usart_set_databits(USART1, 8);
+	usart_set_stopbits(USART1, USART_STOPBITS_1);
+	usart_set_mode(USART1, USART_MODE_TX);
+	usart_set_parity(USART1, USART_PARITY_NONE);
+	usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
+
+	usart_enable(USART1);
+}
+
+blt_bool CpuUserProgramStartHook(void)
+{
+	// Turn off both LEDs
+	gpio_clear(GPIOC, GPIO13);
+	gpio_clear(GPIOB, GPIO5);
+
+	return BLT_TRUE;
+}
+
+void CopInitHook(void)
+{
+	ledBlinkIntervalMs = 100;
+}
+
+void CopServiceHook(void)
+{
+	static blt_bool ledOn = BLT_FALSE;
+	static blt_int32u nextBlinkEvent = 0;
+
+	// check for blink event
+	if (TimerGet() < nextBlinkEvent) {
+		return;
+	}
+
+	// toggle the LED state
+	if (ledOn == BLT_FALSE) {
+		ledOn = BLT_TRUE;
+		gpio_set(GPIOC, GPIO13);
+		gpio_clear(GPIOB, GPIO5);
+	} else {
+		ledOn = BLT_FALSE;
+		gpio_clear(GPIOC, GPIO13);
+		gpio_set(GPIOB, GPIO5);
+	}
+
+	nextBlinkEvent = TimerGet() + ledBlinkIntervalMs;
+}
+
 int main(void)
 {
-  /* initialize the microcontroller */
-  Init();
-  /* initialize the bootloader */
-  BootInit();
+	// configure clock and peripherals
+	cpu_init();
 
-  /* start the infinite program loop */
-  while (1)
-  {
-    /* run the bootloader task */
-    BootTask();
-  }
+	// initialize the bootloader
+	BootInit();
 
-  /* program should never get here */
-  return 0;
-} /*** end of main ***/
+	// Turn off both LEDs
+	gpio_clear(GPIOC, GPIO13);
+	gpio_clear(GPIOB, GPIO5);
 
+	while (1) {
+		// run boot task
+		BootTask();
+	}
 
-/************************************************************************************//**
-** \brief     Initializes the microcontroller.
-** \return    none.
-**
-****************************************************************************************/
-static void Init(void)
-{
-  volatile blt_int32u StartUpCounter = 0, HSEStatus = 0;
-  blt_int32u pll_multiplier;
-  GPIO_InitTypeDef  GPIO_InitStruct;
-
-  /* reset the RCC clock configuration to the default reset state (for debug purpose) */
-  /* set HSION bit */
-  RCC->CR |= (blt_int32u)0x00000001;
-  /* reset SW, HPRE, PPRE1, PPRE2, ADCPRE and MCO bits */
-  RCC->CFGR &= (blt_int32u)0xF8FF0000;
-  /* reset HSEON, CSSON and PLLON bits */
-  RCC->CR &= (blt_int32u)0xFEF6FFFF;
-  /* reset HSEBYP bit */
-  RCC->CR &= (blt_int32u)0xFFFBFFFF;
-  /* reset PLLSRC, PLLXTPRE, PLLMUL and USBPRE/OTGFSPRE bits */
-  RCC->CFGR &= (blt_int32u)0xFF80FFFF;
-  /* disable all interrupts and clear pending bits  */
-  RCC->CIR = 0x009F0000;
-  /* enable HSE */
-  RCC->CR |= ((blt_int32u)RCC_CR_HSEON);
-  /* wait till HSE is ready and if Time out is reached exit */
-  do
-  {
-    HSEStatus = RCC->CR & RCC_CR_HSERDY;
-    StartUpCounter++;
-  }
-  while((HSEStatus == 0) && (StartUpCounter != 1500));
-  /* check if time out was reached */
-  if ((RCC->CR & RCC_CR_HSERDY) == RESET)
-  {
-    /* cannot continue when HSE is not ready */
-    ASSERT_RT(BLT_FALSE);
-  }
-  /* enable flash prefetch buffer */
-  FLASH->ACR |= FLASH_ACR_PRFTBE;
-  /* reset flash wait state configuration to default 0 wait states */
-  FLASH->ACR &= (blt_int32u)((blt_int32u)~FLASH_ACR_LATENCY);
-#if (BOOT_CPU_SYSTEM_SPEED_KHZ > 48000)
-  /* configure 2 flash wait states */
-  FLASH->ACR |= (blt_int32u)FLASH_ACR_LATENCY_2;
-#elif (BOOT_CPU_SYSTEM_SPEED_KHZ > 24000)
-  /* configure 1 flash wait states */
-  FLASH->ACR |= (blt_int32u)FLASH_ACR_LATENCY_1;
-#endif
-  /* HCLK = SYSCLK */
-  RCC->CFGR |= (blt_int32u)RCC_CFGR_HPRE_DIV1;
-  /* PCLK2 = HCLK/2 */
-  RCC->CFGR |= (blt_int32u)RCC_CFGR_PPRE2_DIV2;
-  /* PCLK1 = HCLK/2 */
-  RCC->CFGR |= (blt_int32u)RCC_CFGR_PPRE1_DIV2;
-  /* reset PLL configuration */
-  RCC->CFGR &= (blt_int32u)((blt_int32u)~(RCC_CFGR_PLLSRC | RCC_CFGR_PLLXTPRE | \
-                                          RCC_CFGR_PLLMULL));
-  /* assert that the pll_multiplier is between 2 and 16 */
-  ASSERT_CT((BOOT_CPU_SYSTEM_SPEED_KHZ/BOOT_CPU_XTAL_SPEED_KHZ) >= 2);
-  ASSERT_CT((BOOT_CPU_SYSTEM_SPEED_KHZ/BOOT_CPU_XTAL_SPEED_KHZ) <= 16);
-  /* calculate multiplier value */
-  pll_multiplier = BOOT_CPU_SYSTEM_SPEED_KHZ/BOOT_CPU_XTAL_SPEED_KHZ;
-  /* convert to register value */
-  pll_multiplier = (blt_int32u)((pll_multiplier - 2) << 18);
-  /* set the PLL multiplier and clock source */
-  RCC->CFGR |= (blt_int32u)(RCC_CFGR_PLLSRC_HSE | pll_multiplier);
-  /* enable PLL */
-  RCC->CR |= RCC_CR_PLLON;
-  /* wait till PLL is ready */
-  while((RCC->CR & RCC_CR_PLLRDY) == 0)
-  {
-  }
-  /* select PLL as system clock source */
-  RCC->CFGR &= (blt_int32u)((blt_int32u)~(RCC_CFGR_SW));
-  RCC->CFGR |= (blt_int32u)RCC_CFGR_SW_PLL;
-  /* wait till PLL is used as system clock source */
-  while ((RCC->CFGR & (blt_int32u)RCC_CFGR_SWS) != (blt_int32u)0x08)
-  {
-  }
-  
-#if (BOOT_COM_UART_ENABLE > 0)
-  /* enable clock for USART2 peripheral */
-  RCC->APB1ENR |= (blt_int32u)0x00020000;
-  /* enable clocks for USART2 transmitter and receiver pins (GPIOA and AFIO) */
-  RCC->APB2ENR |= (blt_int32u)(0x00000004 | 0x00000001);
-  /* configure USART2 Tx (GPIOA2) as alternate function push-pull */
-  /* first reset the configuration */
-  GPIOA->CRL &= ~(blt_int32u)((blt_int32u)0xf << 8);
-  /* CNF2[1:0] = %10 and MODE2[1:0] = %11 */
-  GPIOA->CRL |= (blt_int32u)((blt_int32u)0xb << 8);
-  /* configure USART2 Rx (GPIOA3) as alternate function input floating */
-  /* first reset the configuration */
-  GPIOA->CRL &= ~(blt_int32u)((blt_int32u)0xf << 12);
-  /* CNF2[1:0] = %01 and MODE2[1:0] = %00 */
-  GPIOA->CRL |= (blt_int32u)((blt_int32u)0x4 << 12);
-#endif
-
-  /* configure the GPIO_LED pin */
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-  GPIO_InitStruct.GPIO_Pin   = GPIO_Pin_5;
-  GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStruct.GPIO_Mode  = GPIO_Mode_Out_PP;
-  GPIO_Init(GPIOA, &GPIO_InitStruct);
-  
-  /* configure the pushbutton pin as input for backdoor entry */
-  RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
-  GPIO_InitStruct.GPIO_Pin = GPIO_Pin_13;
-  GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-  GPIO_Init(GPIOC, &GPIO_InitStruct);
-} /*** end of Init ***/
-
-
-/*********************************** end of main.c *************************************/
+	return 0;
+}
