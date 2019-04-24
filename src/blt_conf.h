@@ -81,6 +81,10 @@
 #define BOOT_CONSOLE_UART_ENABLE 		1
 // Configure the desired UART baudrate
 #define BOOT_CONSOLE_UART_BAUDRATE 		(115200)
+// Configure the desired UART data bits
+#define BOOT_CONSOLE_UART_DATA_BITS		(8)
+// Configure the desired UART stop bits
+#define BOOT_CONSOLE_UART_STOP_BITS		(1)
 // Select the desired UART peripheral as a zero based index
 #define BOOT_CONSOLE_COM_UART_CHANNEL_INDEX 	0
 
