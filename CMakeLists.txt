@@ -5,6 +5,10 @@ set(CMAKE_SYSTEM_NAME Generic)
 set(PROJECT_NAME HAPBoot)
 PROJECT(${PROJECT_NAME} C ASM)
 
+# get HEAD's hash since I don't do versioning
+execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE GIT_REV
+		OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 #------------------------------------------------------------------------------#
 # 			    Compiler configuration
 #------------------------------------------------------------------------------#
@@ -33,6 +37,7 @@ add_definitions(
 	-DVECT_TAB_FLASH
 	-D__HEAP_SIZE=${HEAP_SIZE}
 	-D__STACK_SIZE=${STACK_SIZE}
+	-DGIT_REV="${GIT_REV}"
 )
 
 # Compilation flags
