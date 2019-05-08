@@ -1,7 +1,7 @@
-diff --git a/Target/Source/backdoor.c b/Target/Source/backdoor.c
+diff --git a/openblt/Target/Source/backdoor.c b/openblt/Target/Source/backdoor.c
 index fae4dc1e..fcdd047f 100644
---- a/Target/Source/backdoor.c
-+++ b/Target/Source/backdoor.c
+--- a/openblt/Target/Source/backdoor.c
++++ b/openblt/Target/Source/backdoor.c
 @@ -164,6 +164,10 @@ void BackDoorCheck(void)
           * this function does not return if a valid user program is present.
           */
@@ -13,10 +13,10 @@ index fae4dc1e..fcdd047f 100644
        }
      }
    }
-diff --git a/Target/Source/boot.c b/Target/Source/boot.c
+diff --git a/openblt/Target/Source/boot.c b/openblt/Target/Source/boot.c
 index 9f6588ac..7b4b58c0 100644
---- a/Target/Source/boot.c
-+++ b/Target/Source/boot.c
+--- a/openblt/Target/Source/boot.c
++++ b/openblt/Target/Source/boot.c
 @@ -39,6 +39,10 @@
  ****************************************************************************************/
  void BootInit(void)
@@ -28,10 +28,10 @@ index 9f6588ac..7b4b58c0 100644
    /* initialize the CPU */
    CpuInit();
    /* initialize the watchdog */
-diff --git a/Target/Source/boot.h b/Target/Source/boot.h
+diff --git a/openblt/Target/Source/boot.h b/openblt/Target/Source/boot.h
 index 82480e85..91b8a569 100644
---- a/Target/Source/boot.h
-+++ b/Target/Source/boot.h
+--- a/openblt/Target/Source/boot.h
++++ b/openblt/Target/Source/boot.h
 @@ -63,6 +65,7 @@
  #include "backdoor.h"                                 /* backdoor entry module         */
  #include "file.h"                                     /* file system module            */
@@ -40,11 +40,11 @@ index 82480e85..91b8a569 100644
  
  
  /****************************************************************************************
-diff --git a/Target/Source/console.c b/Target/Source/console.c
+diff --git a/openblt/Target/Source/console.c b/openblt/Target/Source/console.c
 new file mode 100644
 index 00000000..9ce1e2ea
 --- /dev/null
-+++ b/Target/Source/console.c
++++ b/openblt/Target/Source/console.c
 @@ -0,0 +1,57 @@
 +/************************************************************************************//**
 +* \file         Source\console.c
@@ -103,11 +103,11 @@ index 00000000..9ce1e2ea
 +#endif /* BOOT_CONSOLE_UART_ENABLE > 0 */
 +
 +/*********************************** end of console.c **************************************/
-diff --git a/Target/Source/console.h b/Target/Source/console.h
+diff --git a/openblt/Target/Source/console.h b/openblt/Target/Source/console.h
 new file mode 100644
 index 00000000..595d3ca1
 --- /dev/null
-+++ b/Target/Source/console.h
++++ b/openblt/Target/Source/console.h
 @@ -0,0 +1,41 @@
 +/************************************************************************************//**
 +* \file         Source\console.h
@@ -150,11 +150,11 @@ index 00000000..595d3ca1
 +
 +#endif /* CONSOLE_H */
 +/*********************************** end of console.h *************************************/
-diff --git a/Target/Source/ee_printf.c b/Target/Source/ee_printf.c
+diff --git a/openblt/Target/Source/ee_printf.c b/openblt/Target/Source/ee_printf.c
 new file mode 100644
 index 00000000..17b5ddfa
 --- /dev/null
-+++ b/Target/Source/ee_printf.c
++++ b/openblt/Target/Source/ee_printf.c
 @@ -0,0 +1,599 @@
 +/* File : barebones/ee_printf.c
 +	This file contains an implementation of ee_printf that only requires a method to output a char to a UART without pulling in library code.

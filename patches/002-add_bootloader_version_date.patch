@@ -1,7 +1,7 @@
-diff --git a/Target/Source/boot.h b/Target/Source/boot.h
+diff --git a/openblt/Target/Source/boot.h b/openblt/Target/Source/boot.h
 index 82480e85..83c195cc 100644
---- a/Target/Source/boot.h
-+++ b/Target/Source/boot.h
+--- a/openblt/Target/Source/boot.h
++++ b/openblt/Target/Source/boot.h
 @@ -37,6 +37,8 @@
  #define BOOT_VERSION_CORE_MINOR    (6u)
  /** \brief Patch number of the bootloader core. */

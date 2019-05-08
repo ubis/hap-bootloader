@@ -1,7 +1,7 @@
-diff --git a/Target/Source/ARMCM3_STM32F1/can.c b/Target/Source/ARMCM3_STM32F1/can.c
+diff --git a/openblt/Target/Source/ARMCM3_STM32F1/can.c b/openblt/Target/Source/ARMCM3_STM32F1/can.c
 index 4509a89f..01d30e01 100644
---- a/Target/Source/ARMCM3_STM32F1/can.c
-+++ b/Target/Source/ARMCM3_STM32F1/can.c
+--- a/openblt/Target/Source/ARMCM3_STM32F1/can.c
++++ b/openblt/Target/Source/ARMCM3_STM32F1/can.c
 @@ -234,7 +234,7 @@ static blt_bool CanGetSpeedConfig(blt_int16u baud, blt_int16u *prescaler,
  void CanInit(void)
  {

@@ -1,7 +1,7 @@
-diff --git a/Target/Source/ARMCM3_STM32F1/can.c b/Target/Source/ARMCM3_STM32F1/can.c
+diff --git a/openblt/Target/Source/ARMCM3_STM32F1/can.c b/openblt/Target/Source/ARMCM3_STM32F1/can.c
 index 4509a89f..8a8bdc71 100644
---- a/Target/Source/ARMCM3_STM32F1/can.c
-+++ b/Target/Source/ARMCM3_STM32F1/can.c
+--- a/openblt/Target/Source/ARMCM3_STM32F1/can.c
++++ b/openblt/Target/Source/ARMCM3_STM32F1/can.c
 @@ -336,6 +336,10 @@ void CanInit(void)
    CANx->FA1R |= CAN_BIT_FILTER0;
    /* leave initialisation mode for the acceptance filter */
@@ -13,11 +13,11 @@ index 4509a89f..8a8bdc71 100644
  } /*** end of CanInit ***/
  
  
-diff --git a/Target/Source/ARMCM3_STM32F1/console.c b/Target/Source/ARMCM3_STM32F1/console.c
+diff --git a/openblt/Target/Source/ARMCM3_STM32F1/console.c b/openblt/Target/Source/ARMCM3_STM32F1/console.c
 new file mode 100644
 index 00000000..ce988834
 --- /dev/null
-+++ b/Target/Source/ARMCM3_STM32F1/console.c
++++ b/openblt/Target/Source/ARMCM3_STM32F1/console.c
 @@ -0,0 +1,97 @@
 +/************************************************************************************//**
 +* \file         Source\ARMCM3_STM32F1\console.c
@@ -116,10 +116,10 @@ index 00000000..ce988834
 +#endif /* BOOT_CONSOLE_UART_ENABLE > 0 */
 +
 +/*********************************** end of console.c *************************************/
-diff --git a/Target/Source/ARMCM3_STM32F1/cpu.c b/Target/Source/ARMCM3_STM32F1/cpu.c
+diff --git a/openblt/Target/Source/ARMCM3_STM32F1/cpu.c b/openblt/Target/Source/ARMCM3_STM32F1/cpu.c
 index 92cef883..4f17d8c1 100644
---- a/Target/Source/ARMCM3_STM32F1/cpu.c
-+++ b/Target/Source/ARMCM3_STM32F1/cpu.c
+--- a/openblt/Target/Source/ARMCM3_STM32F1/cpu.c
++++ b/openblt/Target/Source/ARMCM3_STM32F1/cpu.c
 @@ -46,7 +46,29 @@
  ****************************************************************************************/
  /** \brief Vector table offset register. */
