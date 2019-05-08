@@ -1,0 +1,239 @@
+diff --git a/openblt/Target/Source/ARMCM3_STM32F1/can.c b/openblt/Target/Source/ARMCM3_STM32F1/can.c
+index 4509a89f..8a8bdc71 100644
+--- a/openblt/Target/Source/ARMCM3_STM32F1/can.c
++++ b/openblt/Target/Source/ARMCM3_STM32F1/can.c
+@@ -336,6 +336,10 @@ void CanInit(void)
+   CANx->FA1R |= CAN_BIT_FILTER0;
+   /* leave initialisation mode for the acceptance filter */
+   CANx->FMR &= ~CAN_BIT_FINIT;
++
++#if (BOOT_CONSOLE_UART_ENABLE > 0)
++    ee_printf("CAN at %d kbit/s initialized, ready!\r\n", BOOT_COM_CAN_BAUDRATE);
++#endif
+ } /*** end of CanInit ***/
+ 
+ 
+diff --git a/openblt/Target/Source/ARMCM3_STM32F1/console.c b/openblt/Target/Source/ARMCM3_STM32F1/console.c
+new file mode 100644
+index 00000000..ce988834
+--- /dev/null
++++ b/openblt/Target/Source/ARMCM3_STM32F1/console.c
+@@ -0,0 +1,97 @@
++/************************************************************************************//**
++* \file         Source\ARMCM3_STM32F1\console.c
++* \brief        Bootloader Console UART communication interface source file.
++* \ingroup      Target_ARMCM3_STM32F1
++* \internal
++*----------------------------------------------------------------------------------------
++*                          C O P Y R I G H T
++*----------------------------------------------------------------------------------------
++*   Copyright (c) 2011  by Feaser    http://www.feaser.com    All rights reserved
++*
++*----------------------------------------------------------------------------------------
++*                            L I C E N S E
++*----------------------------------------------------------------------------------------
++* This file is part of OpenBLT. OpenBLT is free software: you can redistribute it and/or
++* modify it under the terms of the GNU General Public License as published by the Free
++* Software Foundation, either version 3 of the License, or (at your option) any later
++* version.
++*
++* OpenBLT is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
++* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
++* PURPOSE. See the GNU General Public License for more details.
++*
++* You have received a copy of the GNU General Public License along with OpenBLT. It
++* should be located in ".\Doc\license.html". If not, contact Feaser to obtain a copy.
++*
++* \endinternal
++****************************************************************************************/
++
++/****************************************************************************************
++* Include files
++****************************************************************************************/
++#include "boot.h"                                /* bootloader generic header          */
++
++#if (BOOT_CONSOLE_UART_ENABLE > 0)
++/****************************************************************************************
++* Type definitions
++****************************************************************************************/
++/** \brief UART register layout. */
++typedef struct
++{
++  volatile blt_int16u SR;                           /**< status register               */
++  blt_int16u          RESERVED0;
++  volatile blt_int16u DR;                           /**< data register                 */
++  blt_int16u          RESERVED1;
++  volatile blt_int16u BRR;                          /**< baudrate register             */
++  blt_int16u          RESERVED2;
++  volatile blt_int16u CR1;                          /**< control register 1            */
++  blt_int16u          RESERVED3;
++  volatile blt_int16u CR2;                          /**< control register 2            */
++  blt_int16u          RESERVED4;
++  volatile blt_int16u CR3;                          /**< control register 3            */
++  blt_int16u          RESERVED5;
++  volatile blt_int16u GTPR;                         /**< guard time and prescale reg.  */
++  blt_int16u          RESERVED6;
++} tUartRegs;                                        /**< UART register layout type     */
++
++
++/****************************************************************************************
++* Macro definitions
++****************************************************************************************/
++/** \brief Timeout time for the reception of a CTO packet. The timer is started upon
++ *         reception of the first packet byte.
++ */
++/** \brief Transmit data reg. empty bit. */
++#define UART_BIT_TXE   ((blt_int16u)0x0080)
++
++
++/****************************************************************************************
++* Register definitions
++****************************************************************************************/
++#if (BOOT_CONSOLE_COM_UART_CHANNEL_INDEX == 0)
++/** \brief Set UART base address to USART1. */
++#define UARTx          ((tUartRegs *) (blt_int32u)0x40013800)
++#elif (BOOT_CONSOLE_COM_UART_CHANNEL_INDEX == 1)
++/** \brief Set UART base address to USART2. */
++#define UARTx          ((tUartRegs *) (blt_int32u)0x40004400)
++#else
++/** \brief Set UART base address to USART1 by default. */
++#define UARTx          ((tUartRegs *) (blt_int32u)0x40013800)
++#endif
++
++
++/************************************************************************************//**
++** \brief     Sends a single char to the UART interface.
++** \param     ch Single character that will be transmitted.
++** \return    none.
++**
++****************************************************************************************/
++void ConsoleSendChar(const char ch)
++{
++  while (!(UARTx->SR & UART_BIT_TXE));
++  UARTx->DR = ch;
++} /*** end of ConsoleSendChar ***/
++
++#endif /* BOOT_CONSOLE_UART_ENABLE > 0 */
++
++/*********************************** end of console.c *************************************/
+diff --git a/openblt/Target/Source/ARMCM3_STM32F1/cpu.c b/openblt/Target/Source/ARMCM3_STM32F1/cpu.c
+index 92cef883..4f17d8c1 100644
+--- a/openblt/Target/Source/ARMCM3_STM32F1/cpu.c
++++ b/openblt/Target/Source/ARMCM3_STM32F1/cpu.c
+@@ -46,7 +46,29 @@
+ ****************************************************************************************/
+ /** \brief Vector table offset register. */
+ #define SCB_VTOR    (*((volatile blt_int32u *) 0xE000ED08))
++/** \brief CPU ID offset register. */
++#define CPU_ID      (*((volatile blt_int32u *) 0xE000ED00))
++/** \brief Flash size offset register. */
++#define FLASH_SIZE  (*((volatile blt_int16u *) 0x1FFFF7E0))
++/** \\brief Unique device id offset 1st register. */
++#define U_ID_1      (*((volatile blt_int32u *) 0x1FFFF7E8))
++/** \\brief Unique device id offset 2nd register. */
++#define U_ID_2      (*((volatile blt_int32u *) 0x1FFFF7EC))
++/** \\brief Unique device id offset 3rd register. */
++#define U_ID_3      (*((volatile blt_int32u *) 0x1FFFF7F0))
+ 
++/****************************************************************************************
++* Type definitions
++****************************************************************************************/
++/** \brief CPU_ID register structure. */
++typedef struct
++{
++  blt_int32u revision : 4;
++  blt_int32u partno   : 12;
++  blt_int32u fconst   : 4;
++  blt_int32u variant  : 4;
++  blt_int32u implmnt  : 8;
++} tCPUIdInfo;
+ 
+ /****************************************************************************************
+ * Hook functions
+@@ -68,6 +90,40 @@ void CpuInit(void)
+    * be that the user program did not properly disable the interrupt generation of 
+    * peripherals. */
+   CpuIrqDisable();
++
++#if (BOOT_CONSOLE_UART_ENABLE > 0)
++  // read cpu_id register
++  tCPUIdInfo *cpuid_reg = (tCPUIdInfo *)&CPU_ID;
++
++  ee_printf("CPU: \tSTM32F10xxx ");
++
++  switch (cpuid_reg->implmnt) {
++  case 0x41:
++    ee_printf("ARM");
++    break;
++  default:
++    ee_printf("unknown");
++    break;
++  }
++
++  switch (cpuid_reg->fconst) {
++  case 0x0F:
++    ee_printf("v7-M");
++    break;
++  }
++
++  switch (cpuid_reg->partno) {
++  case 0x0C23:
++    ee_printf(" Cortex-M3");
++    break;
++  }
++
++  ee_printf("\r\n");
++  ee_printf("CLK: \t%02d MHz\r\n", BOOT_CPU_SYSTEM_SPEED_KHZ / 1000);
++  ee_printf("Flash: \t%02d KiB\r\n", FLASH_SIZE);
++  ee_printf("UID: \t%08X%08X%08X\r\n", U_ID_1, U_ID_2, U_ID_3);
++  ee_printf("\r\n");
++#endif
+ } /*** end of CpuInit ***/
+ 
+ 
+@@ -81,10 +137,17 @@ void CpuStartUserProgram(void)
+ {
+   void (*pProgResetHandler)(void);
+ 
++#if (BOOT_CONSOLE_UART_ENABLE > 0)
++  ee_printf("Preparing to boot...\n\r\n");
++#endif
++
+   /* check if a user program is present by verifying the checksum */
+   if (NvmVerifyChecksum() == BLT_FALSE)
+   {
+     /* not a valid user program so it cannot be started */
++#if (BOOT_CONSOLE_UART_ENABLE > 0)
++    ee_printf("Failed to verify checksum!\r\n");
++#endif
+     return;
+   }
+ #if (BOOT_CPU_USER_PROGRAM_START_HOOK > 0)
+@@ -92,6 +155,9 @@ void CpuStartUserProgram(void)
+   if (CpuUserProgramStartHook() == BLT_FALSE)
+   {
+     /* callback requests the user program to not be started */
++#if (BOOT_CONSOLE_UART_ENABLE > 0)
++    ee_printf("Failed to start user program!\r\n");
++#endif
+     return;
+   }
+ #endif
+@@ -113,6 +179,17 @@ void CpuStartUserProgram(void)
+    * not have to be done by the user program.
+    */
+   CpuIrqEnable();
++#if (BOOT_CONSOLE_UART_ENABLE > 0)
++  ee_printf("## Booting kernel from Image...\r\n");
++  ee_printf("\tImage Name:\tEmbedded ARM image\r\n");
++  ee_printf("\tImage Type:\tARM Cortex-M3 Kernel Image\r\n");
++  ee_printf("\tLoad Address:\t%02X\r\n", CPU_USER_PROGRAM_VECTABLE_OFFSET);
++  ee_printf("\tEntry Point:\t%02X\r\n", SCB_VTOR);
++  ee_printf("\tLoading Kernel Image ... OK\r\n");
++  ee_printf("OK\r\n");
++  ee_printf("\r\n");
++  ee_printf("Starting kernel ...\r\n");
++#endif
+   /* start the user program by activating its reset interrupt service routine */
+   pProgResetHandler();
+ } /*** end of CpuStartUserProgram ***/

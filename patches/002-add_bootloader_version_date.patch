@@ -1,0 +1,13 @@
+diff --git a/openblt/Target/Source/boot.h b/openblt/Target/Source/boot.h
+index 82480e85..83c195cc 100644
+--- a/openblt/Target/Source/boot.h
++++ b/openblt/Target/Source/boot.h
+@@ -37,6 +37,8 @@
+ #define BOOT_VERSION_CORE_MINOR    (6u)
+ /** \brief Patch number of the bootloader core. */
+ #define BOOT_VERSION_CORE_PATCH    (0u)
++/** \brief Date of the bootloader version. */
++#define BOOT_VERSION_CORE_DATE      "2018.07"
+ 
+ 
+ /****************************************************************************************
