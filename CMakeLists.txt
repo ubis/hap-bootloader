@@ -52,6 +52,51 @@ add_compile_options(
 )
 
 #------------------------------------------------------------------------------#
+# 				   Patching
+#------------------------------------------------------------------------------#
+# Taken from: https://github.com/facebook/hhvm/blob/master/CMakeLists.txt
+# This must run before scanning for sources, otherwise new files added by
+#  patches won't exist in the buildable source file list.
+# I should consider using quilt probably.
+
+# Scan for available patches
+file(GLOB PATCHES "${CMAKE_SOURCE_DIR}/patches/*.patch")
+
+# Apply patch
+foreach(PATCH ${PATCHES})
+	message(STATUS "Applying ${PATCH}")
+	execute_process(
+		COMMAND patch -p1 --forward --ignore-whitespace --binary
+		WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+		INPUT_FILE "${PATCH}"
+		OUTPUT_VARIABLE OUTPUT
+		RESULT_VARIABLE RESULT
+	)
+
+	if (NOT RESULT EQUAL 0)
+		message(STATUS "\n${OUTPUT}")
+
+		# Unfortunately although patch will recognise that a patch is
+		#  already applied it will still return an error.
+		execute_process(
+			COMMAND patch -p1 -R --dry-run --binary
+			WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+			INPUT_FILE "${PATCH}"
+			OUTPUT_VARIABLE OUTPUT
+			RESULT_VARIABLE RESULT2
+		)
+
+		message(STATUS "\n${OUTPUT}")
+
+		if (RESULT2 EQUAL 0)
+			message(STATUS "Patch was already applied: ${PATCH}")
+		else()
+			message(FATAL_ERROR "Error applying patch ${PATCH}")
+		endif()
+	endif()
+endforeach(PATCH)
+
+#------------------------------------------------------------------------------#
 # 				Project sources
 #------------------------------------------------------------------------------#
 
