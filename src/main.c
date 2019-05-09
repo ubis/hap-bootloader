@@ -41,16 +41,16 @@ static void cpu_init(void)
 		      GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO12);
 
 	// Status LED
-	gpio_set_mode(GPIOC, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, GPIO13);
+	gpio_set_mode(SYSTEM_STATUS_LED_PORT, GPIO_MODE_OUTPUT_50_MHZ,
+		      GPIO_CNF_OUTPUT_PUSHPULL, SYSTEM_STATUS_LED_PIN);
 
 	// Error LED
 	gpio_set_mode(GPIOB, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, GPIO5);
+		      GPIO_CNF_OUTPUT_PUSHPULL, SYSTEM_ERROR_LED_PIN);
 
 	// Turn on both LEDs
-	gpio_set(GPIOC, GPIO13);
-	gpio_set(GPIOB, GPIO5);
+	gpio_set(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
+	gpio_set(GPIOB, SYSTEM_ERROR_LED_PIN);
 
 	// Setup USART
 	usart_set_baudrate(USART1, BOOT_CONSOLE_UART_BAUDRATE);
@@ -66,8 +66,8 @@ static void cpu_init(void)
 blt_bool CpuUserProgramStartHook(void)
 {
 	// Turn off both LEDs
-	gpio_clear(GPIOC, GPIO13);
-	gpio_clear(GPIOB, GPIO5);
+	gpio_clear(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
+	gpio_clear(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 
 	return BLT_TRUE;
 }
@@ -90,12 +90,12 @@ void CopServiceHook(void)
 	// toggle the LED state
 	if (ledOn == BLT_FALSE) {
 		ledOn = BLT_TRUE;
-		gpio_set(GPIOC, GPIO13);
-		gpio_clear(GPIOB, GPIO5);
+		gpio_set(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
+		gpio_clear(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 	} else {
 		ledOn = BLT_FALSE;
-		gpio_clear(GPIOC, GPIO13);
-		gpio_set(GPIOB, GPIO5);
+		gpio_clear(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
+		gpio_set(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 	}
 
 	nextBlinkEvent = TimerGet() + ledBlinkIntervalMs;
@@ -110,8 +110,8 @@ int main(void)
 	BootInit();
 
 	// Turn off both LEDs
-	gpio_clear(GPIOC, GPIO13);
-	gpio_clear(GPIOB, GPIO5);
+	gpio_clear(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
+	gpio_clear(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 
 	while (1) {
 		// run boot task
