@@ -78,7 +78,7 @@
  */
 
 // Enable/disable the UART console interface
-#define BOOT_CONSOLE_UART_ENABLE 		1
+#define BOOT_CONSOLE_UART_ENABLE 		(1)
 // Configure the desired UART baudrate
 #define BOOT_CONSOLE_UART_BAUDRATE 		(115200)
 // Configure the desired UART data bits
@@ -86,7 +86,7 @@
 // Configure the desired UART stop bits
 #define BOOT_CONSOLE_UART_STOP_BITS		(1)
 // Select the desired UART peripheral as a zero based index
-#define BOOT_CONSOLE_COM_UART_CHANNEL_INDEX 	0
+#define BOOT_CONSOLE_COM_UART_CHANNEL_INDEX 	(0)
 
 /*******************************************************************************
 *   N O N - V O L A T I L E  M E M O R Y  D R I V E R  C O N F I G U R A T I O N
@@ -142,12 +142,12 @@
  */
 
 // Configure status led port
-#define SYSTEM_STATUS_LED_PORT 	GPIOC
+#define SYSTEM_STATUS_LED_PORT 	(GPIOC)
 // Configure status led pin
-#define SYSTEM_STATUS_LED_PIN 	GPIO13
+#define SYSTEM_STATUS_LED_PIN 	(GPIO13)
 // Configure error led port
-#define SYSTEM_ERROR_LED_PORT 	GPIOB
+#define SYSTEM_ERROR_LED_PORT 	(GPIOB)
 // Configure error led pin
-#define SYSTEM_ERROR_LED_PIN 	GPIO5
+#define SYSTEM_ERROR_LED_PIN 	(GPIO5)
 
 #endif
