@@ -8,7 +8,7 @@ index 4509a89f..8a8bdc71 100644
    CANx->FMR &= ~CAN_BIT_FINIT;
 +
 +#if (BOOT_CONSOLE_UART_ENABLE > 0)
-+    ee_printf("CAN at %d kbit/s initialized, ready!\r\n", BOOT_COM_CAN_BAUDRATE);
++    ee_printf("CAN at %d bit/s initialized, ready!\r\n", BOOT_COM_CAN_BAUDRATE);
 +#endif
  } /*** end of CanInit ***/
  
