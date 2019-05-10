@@ -132,6 +132,20 @@
 #define BOOT_COP_HOOKS_ENABLE (1)
 
 /*******************************************************************************
+*   B A C K D O O R    C O N F I G U R A T I O N
+*******************************************************************************/
+/* For a USB bootloader, the backdoor needs to stay open long enough for the
+ * USB device to enumerate on the host PC. Therefore it needs to be set a bit
+ * longer than the default value, which is done here by overriding the macro.
+ * Note that this won't be long enough for a first time USB driver install on
+ * the host PC. In this case the bootloader should be started with the backup
+ * backdoor that uses a digital input to for the bootloader to stay active.
+ * Refer to CpuUserProgramStartHook() to determine the digital input to use
+ * for this.
+ */
+#define BOOT_BACKDOOR_ENTRY_TIMEOUT_MS (5000)
+
+/*******************************************************************************
 *   L E D   C O N F I G U R A T I O N
 *******************************************************************************/
 /* Set board-specific status and error led port and pin values. Status led

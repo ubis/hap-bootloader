@@ -161,6 +161,9 @@ int main(void)
 	CanTransmitPacket(&id_arr[0], sizeof(address));
 
 	ee_printf("\r\n");
+	ee_printf("Autoboot in %d seconds...\r\n",
+		  BOOT_BACKDOOR_ENTRY_TIMEOUT_MS / 1000);
+	ee_printf("\r\n");
 
 	while (1) {
 		// run boot task
