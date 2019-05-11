@@ -40,12 +40,12 @@ typedef enum {
 
 typedef union {
 	struct {
-		int mode       : 1;
-		int reserved   : 2;
-		int type       : 2;
-		int command    : 8;
-		int group      : 8;
 		int address    : 8;
+		int group      : 8;
+		int command    : 8;
+		int type       : 2;
+		int reserved   : 2;
+		int mode       : 1;
 		int identifier : 3;
 	};
 
