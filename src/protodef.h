@@ -33,14 +33,20 @@ typedef enum {
 	BOOT_FAIL_START,
 } boot_fail_t;
 
+typedef enum {
+	ID_11_BIT,
+	ID_29_BIT = 0x04,
+} identifier_t;
+
 typedef union {
 	struct {
-		int mode     : 1;
-		int reserved : 2;
-		int type     : 2;
-		int command  : 8;
-		int group    : 8;
-		int address  : 8;
+		int mode       : 1;
+		int reserved   : 2;
+		int type       : 2;
+		int command    : 8;
+		int group      : 8;
+		int address    : 8;
+		int identifier : 3;
 	};
 
 	int id;
