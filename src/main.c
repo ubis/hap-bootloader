@@ -92,6 +92,11 @@ unsigned short calc_crc16(const unsigned char *addr, size_t len)
 	return crc;
 }
 
+void CpuStartUserProgramStateHook(unsigned int state)
+{
+	/* */
+}
+
 unsigned char CpuUserProgramStartHook(void)
 {
 	// Turn off both LEDs
