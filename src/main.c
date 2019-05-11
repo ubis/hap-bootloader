@@ -95,7 +95,29 @@ unsigned short calc_crc16(const unsigned char *addr, size_t len)
 
 void CpuStartUserProgramStateHook(unsigned int state)
 {
-	/* */
+	unsigned char nfy_state[1] = { BOOT_FAIL_START };
+
+	switch (state) {
+	case BLT_STATE_CHECKSUM_FAIL:
+		nfy_state[0] = BOOT_FAIL_CHECKSUM;
+		break;
+	case BLT_STATE_START_HOOK_FAIL:
+		nfy_state[0] = BOOT_FAIL_PRE_START;
+		break;
+	}
+
+	// send boot fail
+	g_header.command = COMMAND_BOOT_FAIL;
+	g_header.group = g_address & 0xFF;
+	g_header.address = (g_address & 0xFF00) >> 8;
+	CanSetTxMsgId(g_header.id);
+	CanTransmitPacket(&nfy_state[0], sizeof(nfy_state));
+
+	// restore header
+	g_header.command = COMMAND_BOOT_PERFORM;
+	g_header.group = 1;
+	g_header.address = 1;
+	CanSetTxMsgId(g_header.id);
 }
 
 unsigned char CpuUserProgramStartHook(void)
@@ -106,11 +128,15 @@ unsigned char CpuUserProgramStartHook(void)
 
 	// send prepare run application
 	g_header.command = COMMAND_BOOT_PREPARE_LAUNCH;
+	g_header.group = g_address & 0xFF;
+	g_header.address = (g_address & 0xFF00) >> 8;
 	CanSetTxMsgId(g_header.id);
 	CanTransmitPacket(NULL, 0);
 
 	// restore header
 	g_header.command = COMMAND_BOOT_PERFORM;
+	g_header.group = 1;
+	g_header.address = 1;
 	CanSetTxMsgId(g_header.id);
 
 	return 1;
@@ -170,8 +196,6 @@ int main(void)
 
 	// set can tx header
 	g_header.command = COMMAND_BOOT_INIT;
-	g_header.group = 1;
-	g_header.address = 1;
 	CanSetTxMsgId(g_header.id);
 
 	// initialize the bootloader
@@ -190,6 +214,8 @@ int main(void)
 
 	// restore header
 	g_header.command = COMMAND_BOOT_PERFORM;
+	g_header.group = 1;
+	g_header.address = 1;
 	CanSetTxMsgId(g_header.id);
 
 	ee_printf("\r\n");
