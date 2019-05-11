@@ -17,7 +17,7 @@
 // unique stm32f1 id 96bit
 #define U_ID_1 (*((unsigned int *) 0x1FFFF7E8))
 
-static blt_int16u ledBlinkIntervalMs;
+static unsigned short ledBlinkIntervalMs;
 
 static void cpu_init(void)
 {
@@ -90,13 +90,13 @@ short calc_crc16(const unsigned char *addr, size_t len)
 	return crc;
 }
 
-blt_bool CpuUserProgramStartHook(void)
+unsigned char CpuUserProgramStartHook(void)
 {
 	// Turn off both LEDs
 	gpio_clear(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
 	gpio_clear(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 
-	return BLT_TRUE;
+	return 1;
 }
 
 void CopInitHook(void)
@@ -106,8 +106,8 @@ void CopInitHook(void)
 
 void CopServiceHook(void)
 {
-	static blt_bool ledOn = BLT_FALSE;
-	static blt_int32u nextBlinkEvent = 0;
+	static unsigned char ledOn = 0;
+	static unsigned int nextBlinkEvent = 0;
 
 	// check for blink event
 	if (TimerGet() < nextBlinkEvent) {
@@ -115,12 +115,12 @@ void CopServiceHook(void)
 	}
 
 	// toggle the LED state
-	if (ledOn == BLT_FALSE) {
-		ledOn = BLT_TRUE;
+	if (!ledOn) {
+		ledOn = 1;
 		gpio_set(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
 		gpio_clear(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 	} else {
-		ledOn = BLT_FALSE;
+		ledOn = 0;
 		gpio_clear(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
 		gpio_set(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 	}
@@ -139,7 +139,6 @@ int main(void)
 
 	// generate address from uid
 	memcpy(id_arr, &U_ID_1, 12);
-
 	address = calc_crc16(&id_arr[0], id_len);
 	memcpy(id_arr, &address, sizeof(address));
 
