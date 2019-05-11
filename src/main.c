@@ -19,7 +19,6 @@
 // unique stm32f1 id 96bit
 #define U_ID_1 (*((unsigned int *) 0x1FFFF7E8))
 
-static unsigned short ledBlinkIntervalMs;
 static header_t g_header;
 
 static void cpu_init(void)
@@ -113,7 +112,7 @@ unsigned char CpuUserProgramStartHook(void)
 
 void CopInitHook(void)
 {
-	ledBlinkIntervalMs = 100;
+	/* */
 }
 
 void CopServiceHook(void)
@@ -137,7 +136,7 @@ void CopServiceHook(void)
 		gpio_set(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 	}
 
-	nextBlinkEvent = TimerGet() + ledBlinkIntervalMs;
+	nextBlinkEvent = TimerGet() + SYSTEM_LED_BLINK_INTERVAL;
 }
 
 int main(void)

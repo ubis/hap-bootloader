@@ -148,20 +148,22 @@
 /*******************************************************************************
 *   L E D   C O N F I G U R A T I O N
 *******************************************************************************/
-/* Set board-specific status and error led port and pin values. Status led
- * port can be configured by setting SYSTEM_STATUS_LED_PORT and pin by setting
- * SYSTEM_STATUS_LED_PIN.
- * Error led port can be configured by setting SYSTEM_ERROR_LED_PORT and pin
- * by setting SYSTEM_ERROR_LED_PIN.
+/* Set board-specific status and error led port and pin values and blinking
+ * interval. Interval can be set by changing SYSTEM_LED_BLINK_INTERVAL.
+ * Status led port can be configured by setting SYSTEM_STATUS_LED_PORT and
+ * pin by setting SYSTEM_STATUS_LED_PIN. Error led port can be configured by
+ * setting SYSTEM_ERROR_LED_PORT and pin by setting SYSTEM_ERROR_LED_PIN.
  */
 
+// Configure led blink interval ms
+#define SYSTEM_LED_BLINK_INTERVAL 	(100)
 // Configure status led port
-#define SYSTEM_STATUS_LED_PORT 	(GPIOC)
+#define SYSTEM_STATUS_LED_PORT 		(GPIOC)
 // Configure status led pin
-#define SYSTEM_STATUS_LED_PIN 	(GPIO13)
+#define SYSTEM_STATUS_LED_PIN 		(GPIO13)
 // Configure error led port
-#define SYSTEM_ERROR_LED_PORT 	(GPIOB)
+#define SYSTEM_ERROR_LED_PORT 		(GPIOB)
 // Configure error led pin
-#define SYSTEM_ERROR_LED_PIN 	(GPIO5)
+#define SYSTEM_ERROR_LED_PIN 		(GPIO5)
 
 #endif
