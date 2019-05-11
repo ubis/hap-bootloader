@@ -1,0 +1,96 @@
+diff --git a/openblt/Target/Source/ARMCM3_STM32F1/can.c b/openblt/Target/Source/ARMCM3_STM32F1/can.c
+index 4509a89f..fdaea2f1 100644
+--- a/openblt/Target/Source/ARMCM3_STM32F1/can.c
++++ b/openblt/Target/Source/ARMCM3_STM32F1/can.c
+@@ -185,6 +185,11 @@ static const tCanBusTiming canTiming[] =
+   { 16, 8 }           /*  25 |  16   |   8   | 68% */
+ };
+ 
++/** \brief CAN transmit message id. */
++static blt_int32u g_txMsgId;
++/** \brief CAN transmit message id. */
++static blt_int32u g_rxMsgId;
++
+ 
+ /************************************************************************************//**
+ ** \brief     Search algorithm to match the desired baudrate to a possible bus
+@@ -237,7 +242,7 @@ void CanInit(void)
+   blt_int8u  tseg1, tseg2;
+   blt_bool   result;
+   blt_int32u timeout;
+-  blt_int32u rxMsgId = BOOT_COM_CAN_RX_MSG_ID;
++  blt_int32u rxMsgId = g_rxMsgId;
+   blt_int32u rxFilterId, rxFilterMask;
+ 
+   /* the current implementation supports CAN1. throw an assertion error in case a
+@@ -302,7 +307,7 @@ void CanInit(void)
+   }
+ 
+   /* determine the reception filter mask and id values such that it only leaves one
+-   * CAN identifier through (BOOT_COM_CAN_RX_MSG_ID).
++   * CAN identifier through (g_rxMsgId).
+    */
+   if ((rxMsgId & 0x80000000) == 0)
+   {
+@@ -348,7 +353,7 @@ void CanInit(void)
+ ****************************************************************************************/
+ void CanTransmitPacket(blt_int8u *data, blt_int8u len)
+ {
+-  blt_int32u txMsgId = BOOT_COM_CAN_TX_MSG_ID;
++  blt_int32u txMsgId = g_txMsgId;
+   blt_int32u timeout;
+ 
+   /* make sure that transmit mailbox 0 is available */
+@@ -430,7 +435,7 @@ blt_bool CanReceivePacket(blt_int8u *data, blt_int8u *len)
+       rxMsgId |= 0x80000000;
+     }
+     /* is this the packet identifier */
+-    if (rxMsgId == BOOT_COM_CAN_RX_MSG_ID)
++    if (rxMsgId == g_rxMsgId)
+     {
+       result = BLT_TRUE;
+       *len = ((blt_int8u)(CANx->sFIFOMailBox[0].RDTR)) & 0x0fu;
+@@ -449,6 +454,30 @@ blt_bool CanReceivePacket(blt_int8u *data, blt_int8u *len)
+   }
+   return result;
+ } /*** end of CanReceivePacket ***/
++
++
++/************************************************************************************//**
++** \brief     Set CAN transmit message id.
++** \param     id Message id to be set.
++** \return    none.
++**
++****************************************************************************************/
++void CanSetTxMsgId(blt_int32u id)
++{
++  g_txMsgId = id;
++} /*** end of CanSetTxMsgId ***/
++
++
++/************************************************************************************//**
++** \brief     Set CAN receive message id.
++** \param     id Message id to be set.
++** \return    none.
++**
++****************************************************************************************/
++void CanSetRxMsgId(blt_int32u id)
++{
++  g_rxMsgId = id;
++} /*** end of CanSetTxMsgId ***/
+ #endif /* BOOT_COM_CAN_ENABLE > 0 */
+ 
+ 
+diff --git a/openblt/Target/Source/can.h b/openblt/Target/Source/can.h
+index d0920eed..72550c17 100644
+--- a/openblt/Target/Source/can.h
++++ b/openblt/Target/Source/can.h
+@@ -35,6 +35,8 @@
+ void     CanInit(void);
+ void     CanTransmitPacket(blt_int8u *data, blt_int8u len);
+ blt_bool CanReceivePacket(blt_int8u *data, blt_int8u *len);
++void     CanSetTxMsgId(blt_int32u id);
++void     CanSetRxMsgId(blt_int32u id);
+ #endif /* BOOT_COM_CAN_ENABLE > 0 */
+ 
+ 
