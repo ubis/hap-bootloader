@@ -20,6 +20,7 @@
 #define U_ID_1 (*((unsigned int *) 0x1FFFF7E8))
 
 static unsigned short ledBlinkIntervalMs;
+static header_t g_header;
 
 static void cpu_init(void)
 {
@@ -133,7 +134,6 @@ void CopServiceHook(void)
 int main(void)
 {
 	const size_t id_len = 12;
-	header_t header = { .id = 0 };
 	unsigned char id_arr[id_len];
 	unsigned short address;
 
@@ -146,20 +146,20 @@ int main(void)
 	memcpy(id_arr, &address, sizeof(address));
 
 	// set can rx header
-	header.mode = MODE_BOOT;
-	header.reserved = 0;
-	header.type = 0;
-	header.command = COMMAND_BOOT_PERFORM;
-	header.group = address & 0xFF;
-	header.address = (address & 0xFF00) >> 8;
-	header.identifier = ID_29_BIT;
-	CanSetRxMsgId(header.id);
+	g_header.mode = MODE_BOOT;
+	g_header.reserved = 0;
+	g_header.type = 0;
+	g_header.command = COMMAND_BOOT_PERFORM;
+	g_header.group = address & 0xFF;
+	g_header.address = (address & 0xFF00) >> 8;
+	g_header.identifier = ID_29_BIT;
+	CanSetRxMsgId(g_header.id);
 
 	// set can tx header
-	header.command = COMMAND_BOOT_INIT;
-	header.group = 1;
-	header.address = 1;
-	CanSetTxMsgId(header.id);
+	g_header.command = COMMAND_BOOT_INIT;
+	g_header.group = 1;
+	g_header.address = 1;
+	CanSetTxMsgId(g_header.id);
 
 	// initialize the bootloader
 	BootInit();
@@ -172,12 +172,12 @@ int main(void)
 
 	ee_printf("Device address: 0x%02X\r\n", address);
 	ee_printf("Sending boot init command...\r\n");
-	CanSetTxMsgId(header.id);
+	CanSetTxMsgId(g_header.id);
 	CanTransmitPacket(&id_arr[0], sizeof(address));
 
 	// restore header
-	header.command = COMMAND_BOOT_PERFORM;
-	CanSetTxMsgId(header.id);
+	g_header.command = COMMAND_BOOT_PERFORM;
+	CanSetTxMsgId(g_header.id);
 
 	ee_printf("\r\n");
 	ee_printf("Autoboot in %d seconds...\r\n",
