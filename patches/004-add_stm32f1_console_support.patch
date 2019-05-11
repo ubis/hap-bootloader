@@ -227,8 +227,8 @@ index 92cef883..4f17d8c1 100644
 +  ee_printf("## Booting kernel from flash...\r\n");
 +  ee_printf("\tImage Name:\tEmbedded ARM Image\r\n");
 +  ee_printf("\tImage Type:\tARM Cortex-M3 Kernel Image\r\n");
-+  ee_printf("\tLoad Address:\t%02X\r\n", CPU_USER_PROGRAM_VECTABLE_OFFSET);
-+  ee_printf("\tEntry Point:\t%02X\r\n", SCB_VTOR);
++  ee_printf("\tLoad Address:\t%08X\r\n", CPU_USER_PROGRAM_VECTABLE_OFFSET);
++  ee_printf("\tEntry Point:\t%08X\r\n", SCB_VTOR);
 +  ee_printf("\tLoading Kernel Image ... OK\r\n");
 +  ee_printf("OK\r\n");
 +  ee_printf("\r\n");

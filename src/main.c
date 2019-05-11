@@ -207,7 +207,7 @@ int main(void)
 	gpio_clear(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
 	gpio_clear(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 
-	ee_printf("Device address: 0x%02X\r\n", g_address);
+	ee_printf("Address: %02X\r\n", g_address);
 	ee_printf("Sending boot init command...\r\n");
 	CanSetTxMsgId(g_header.id);
 	CanTransmitPacket(&id_arr[0], sizeof(g_address));
