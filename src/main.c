@@ -14,6 +14,8 @@
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/stm32/crc.h>
 
+#include "protodef.h"
+
 // unique stm32f1 id 96bit
 #define U_ID_1 (*((unsigned int *) 0x1FFFF7E8))
 
@@ -130,6 +132,7 @@ void CopServiceHook(void)
 
 int main(void)
 {
+	header_t header = { .id = 0 };
 	const size_t id_len = 12;
 	unsigned char id_arr[id_len];
 	short address;
@@ -141,6 +144,14 @@ int main(void)
 	memcpy(id_arr, &U_ID_1, 12);
 	address = calc_crc16(&id_arr[0], id_len);
 	memcpy(id_arr, &address, sizeof(address));
+
+	// prepare header
+	header.mode = MODE_BOOT;
+	header.reserved = 0;
+	header.type = 0;
+	header.command = COMMAND_BOOT_INIT;
+	header.group = address & 0xFF;
+	header.address = (address & 0xFF00) >> 8;
 
 	// initialize the bootloader
 	BootInit();
