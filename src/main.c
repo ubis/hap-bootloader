@@ -72,7 +72,7 @@ static void cpu_init(void)
 	usart_enable(USART1);
 }
 
-unsigned short calc_crc16(const unsigned char *addr, size_t len)
+static unsigned short calc_crc16(const unsigned char *addr, size_t len)
 {
 	const unsigned short mask = 0x8000;
 	const unsigned short poly = 0x1021;
