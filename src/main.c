@@ -180,7 +180,7 @@ int main(void)
 	cpu_init();
 
 	// generate address from uid
-	memcpy(id_arr, &U_ID_1, 12);
+	memcpy(id_arr, &U_ID_1, id_len);
 	g_address = calc_crc16(&id_arr[0], id_len);
 	memcpy(id_arr, &g_address, sizeof(g_address));
 
