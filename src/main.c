@@ -20,6 +20,7 @@
 #define U_ID_1 (*((unsigned int *) 0x1FFFF7E8))
 
 static header_t g_header;
+static unsigned short g_address;
 
 static void cpu_init(void)
 {
@@ -148,23 +149,22 @@ int main(void)
 {
 	const size_t id_len = 12;
 	unsigned char id_arr[id_len];
-	unsigned short address;
 
 	// configure clock and peripherals
 	cpu_init();
 
 	// generate address from uid
 	memcpy(id_arr, &U_ID_1, 12);
-	address = calc_crc16(&id_arr[0], id_len);
-	memcpy(id_arr, &address, sizeof(address));
+	g_address = calc_crc16(&id_arr[0], id_len);
+	memcpy(id_arr, &g_address, sizeof(g_address));
 
 	// set can rx header
 	g_header.mode = MODE_BOOT;
 	g_header.reserved = 0;
 	g_header.type = 0;
 	g_header.command = COMMAND_BOOT_PERFORM;
-	g_header.group = address & 0xFF;
-	g_header.address = (address & 0xFF00) >> 8;
+	g_header.group = g_address & 0xFF;
+	g_header.address = (g_address & 0xFF00) >> 8;
 	g_header.identifier = ID_29_BIT;
 	CanSetRxMsgId(g_header.id);
 
@@ -183,10 +183,10 @@ int main(void)
 	gpio_clear(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
 	gpio_clear(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 
-	ee_printf("Device address: 0x%02X\r\n", address);
+	ee_printf("Device address: 0x%02X\r\n", g_address);
 	ee_printf("Sending boot init command...\r\n");
 	CanSetTxMsgId(g_header.id);
-	CanTransmitPacket(&id_arr[0], sizeof(address));
+	CanTransmitPacket(&id_arr[0], sizeof(g_address));
 
 	// restore header
 	g_header.command = COMMAND_BOOT_PERFORM;
