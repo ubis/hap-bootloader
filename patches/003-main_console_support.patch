@@ -32,7 +32,7 @@ diff --git a/openblt/Target/Source/boot.h b/openblt/Target/Source/boot.h
 index 82480e85..91b8a569 100644
 --- a/openblt/Target/Source/boot.h
 +++ b/openblt/Target/Source/boot.h
-@@ -63,6 +65,7 @@
+@@ -65,6 +67,7 @@
  #include "backdoor.h"                                 /* backdoor entry module         */
  #include "file.h"                                     /* file system module            */
  #include "com.h"                                      /* communication interface       */

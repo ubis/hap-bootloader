@@ -15,7 +15,7 @@ index 4509a89f..fdaea2f1 100644
  /************************************************************************************//**
  ** \brief     Search algorithm to match the desired baudrate to a possible bus
 @@ -237,7 +242,7 @@ void CanInit(void)
-   blt_int8u  tseg1, tseg2;
+   blt_int8u  tseg1 = 0, tseg2 = 0;
    blt_bool   result;
    blt_int32u timeout;
 -  blt_int32u rxMsgId = BOOT_COM_CAN_RX_MSG_ID;
@@ -32,7 +32,7 @@ index 4509a89f..fdaea2f1 100644
     */
    if ((rxMsgId & 0x80000000) == 0)
    {
-@@ -348,7 +353,7 @@ void CanInit(void)
+@@ -352,7 +357,7 @@ void CanInit(void)
  ****************************************************************************************/
  void CanTransmitPacket(blt_int8u *data, blt_int8u len)
  {
@@ -41,7 +41,7 @@ index 4509a89f..fdaea2f1 100644
    blt_int32u timeout;
  
    /* make sure that transmit mailbox 0 is available */
-@@ -430,7 +435,7 @@ blt_bool CanReceivePacket(blt_int8u *data, blt_int8u *len)
+@@ -434,7 +439,7 @@ blt_bool CanReceivePacket(blt_int8u *data, blt_int8u *len)
        rxMsgId |= 0x80000000;
      }
      /* is this the packet identifier */
@@ -50,7 +50,7 @@ index 4509a89f..fdaea2f1 100644
      {
        result = BLT_TRUE;
        *len = ((blt_int8u)(CANx->sFIFOMailBox[0].RDTR)) & 0x0fu;
-@@ -449,6 +454,30 @@ blt_bool CanReceivePacket(blt_int8u *data, blt_int8u *len)
+@@ -453,6 +459,30 @@ blt_bool CanReceivePacket(blt_int8u *data, blt_int8u *len)
    }
    return result;
  } /*** end of CanReceivePacket ***/
