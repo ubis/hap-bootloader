@@ -132,8 +132,8 @@ void CopServiceHook(void)
 
 int main(void)
 {
-	header_t header = { .id = 0 };
 	const size_t id_len = 12;
+	header_t header = { .id = 0 };
 	unsigned char id_arr[id_len];
 	unsigned short address;
 
