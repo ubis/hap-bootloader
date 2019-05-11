@@ -99,6 +99,15 @@ unsigned char CpuUserProgramStartHook(void)
 	gpio_clear(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
 	gpio_clear(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 
+	// send prepare run application
+	g_header.command = COMMAND_BOOT_PREPARE_LAUNCH;
+	CanSetTxMsgId(g_header.id);
+	CanTransmitPacket(NULL, 0);
+
+	// restore header
+	g_header.command = COMMAND_BOOT_PERFORM;
+	CanSetTxMsgId(g_header.id);
+
 	return 1;
 }
 
