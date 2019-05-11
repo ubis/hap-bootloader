@@ -14,10 +14,8 @@
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/stm32/crc.h>
 
-// unique stm32f1 id
+// unique stm32f1 id 96bit
 #define U_ID_1 (*((unsigned int *) 0x1FFFF7E8))
-#define U_ID_2 (*((unsigned int *) 0x1FFFF7EC))
-#define U_ID_3 (*((unsigned int *) 0x1FFFF7F0))
 
 static blt_int16u ledBlinkIntervalMs;
 
@@ -71,12 +69,12 @@ static void cpu_init(void)
 	usart_enable(USART1);
 }
 
-uint16_t calc_crc16(const uint8_t *addr, uint32_t len)
+short calc_crc16(const unsigned char *addr, size_t len)
 {
-	const uint16_t mask = 0x8000;
-	const uint16_t poly = 0x1021;
-	uint16_t crc = 0xFFFF;
-	uint8_t i;
+	const short mask = 0x8000;
+	const short poly = 0x1021;
+	short crc = 0xFFFF;
+	char i;
 
 	while (len--) {
 		crc ^= (*addr++) << 8;
@@ -132,17 +130,15 @@ void CopServiceHook(void)
 
 int main(void)
 {
-	unsigned char id_arr[sizeof(unsigned int) * 3] = { 0 };
-	const size_t id_len = sizeof(id_arr) / sizeof(id_arr[0]);
-	uint16_t address;
+	const size_t id_len = 12;
+	unsigned char id_arr[id_len];
+	short address;
 
 	// configure clock and peripherals
 	cpu_init();
 
 	// generate address from uid
-	memcpy(id_arr, &U_ID_1, 4);
-	memcpy(id_arr + 4, &U_ID_2, 4);
-	memcpy(id_arr + 8, &U_ID_3, 4);
+	memcpy(id_arr, &U_ID_1, 12);
 
 	address = calc_crc16(&id_arr[0], id_len);
 	memcpy(id_arr, &address, sizeof(address));
@@ -163,7 +159,6 @@ int main(void)
 	ee_printf("\r\n");
 	ee_printf("Autoboot in %d seconds...\r\n",
 		  BOOT_BACKDOOR_ENTRY_TIMEOUT_MS / 1000);
-	ee_printf("\r\n");
 
 	while (1) {
 		// run boot task
