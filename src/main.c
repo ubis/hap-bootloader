@@ -71,11 +71,11 @@ static void cpu_init(void)
 	usart_enable(USART1);
 }
 
-short calc_crc16(const unsigned char *addr, size_t len)
+unsigned short calc_crc16(const unsigned char *addr, size_t len)
 {
-	const short mask = 0x8000;
-	const short poly = 0x1021;
-	short crc = 0xFFFF;
+	const unsigned short mask = 0x8000;
+	const unsigned short poly = 0x1021;
+	unsigned short crc = 0xFFFF;
 	char i;
 
 	while (len--) {
@@ -135,7 +135,7 @@ int main(void)
 	header_t header = { .id = 0 };
 	const size_t id_len = 12;
 	unsigned char id_arr[id_len];
-	short address;
+	unsigned short address;
 
 	// configure clock and peripherals
 	cpu_init();
@@ -145,13 +145,21 @@ int main(void)
 	address = calc_crc16(&id_arr[0], id_len);
 	memcpy(id_arr, &address, sizeof(address));
 
-	// prepare header
+	// set can rx header
 	header.mode = MODE_BOOT;
 	header.reserved = 0;
 	header.type = 0;
-	header.command = COMMAND_BOOT_INIT;
+	header.command = COMMAND_BOOT_PERFORM;
 	header.group = address & 0xFF;
 	header.address = (address & 0xFF00) >> 8;
+	header.identifier = ID_29_BIT;
+	CanSetRxMsgId(header.id);
+
+	// set can tx header
+	header.command = COMMAND_BOOT_INIT;
+	header.group = 1;
+	header.address = 1;
+	CanSetTxMsgId(header.id);
 
 	// initialize the bootloader
 	BootInit();
@@ -164,7 +172,12 @@ int main(void)
 
 	ee_printf("Device address: 0x%02X\r\n", address);
 	ee_printf("Sending boot init command...\r\n");
+	CanSetTxMsgId(header.id);
 	CanTransmitPacket(&id_arr[0], sizeof(address));
+
+	// restore header
+	header.command = COMMAND_BOOT_PERFORM;
+	CanSetTxMsgId(header.id);
 
 	ee_printf("\r\n");
 	ee_printf("Autoboot in %d seconds...\r\n",
