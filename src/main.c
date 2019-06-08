@@ -93,6 +93,14 @@ static unsigned short calc_crc16(const unsigned char *addr, size_t len)
 	return crc;
 }
 
+static void restore_header(void)
+{
+	g_header.command = COMMAND_BOOT_PERFORM;
+	g_header.group = 1;
+	g_header.address = 1;
+	CanSetTxMsgId(g_header.id);
+}
+
 void CpuStartUserProgramStateHook(unsigned int state)
 {
 	unsigned char nfy_state[1] = { BOOT_FAIL_START };
@@ -114,10 +122,7 @@ void CpuStartUserProgramStateHook(unsigned int state)
 	CanTransmitPacket(&nfy_state[0], sizeof(nfy_state));
 
 	// restore header
-	g_header.command = COMMAND_BOOT_PERFORM;
-	g_header.group = 1;
-	g_header.address = 1;
-	CanSetTxMsgId(g_header.id);
+	restore_header();
 }
 
 unsigned char CpuUserProgramStartHook(void)
@@ -134,10 +139,7 @@ unsigned char CpuUserProgramStartHook(void)
 	CanTransmitPacket(NULL, 0);
 
 	// restore header
-	g_header.command = COMMAND_BOOT_PERFORM;
-	g_header.group = 1;
-	g_header.address = 1;
-	CanSetTxMsgId(g_header.id);
+	restore_header();
 
 	return 1;
 }
@@ -213,10 +215,7 @@ int main(void)
 	CanTransmitPacket(&id_arr[0], sizeof(g_address));
 
 	// restore header
-	g_header.command = COMMAND_BOOT_PERFORM;
-	g_header.group = 1;
-	g_header.address = 1;
-	CanSetTxMsgId(g_header.id);
+	restore_header();
 
 	ee_printf("\r\n");
 	ee_printf("Autoboot in %d seconds...\r\n",
