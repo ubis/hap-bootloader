@@ -14,20 +14,6 @@ typedef enum {
 } mode_t;
 
 typedef enum {
-	COMMAND_BOOT_PERFORM,
-	COMMAND_BOOT_INIT,
-	COMMAND_BOOT_PREPARE_LAUNCH,
-	COMMAND_BOOT_FAIL,
-	COMMAND_BOOT_GET_STATE,
-	COMMAND_BOOT_GET_VERSION,
-} command_t;
-
-typedef enum {
-	STATE_BOOTLOADER,
-	STATE_APPLICATION,
-} state_t;
-
-typedef enum {
 	BOOT_FAIL_CHECKSUM,
 	BOOT_FAIL_PRE_START,
 	BOOT_FAIL_START,
@@ -40,11 +26,8 @@ typedef enum {
 
 typedef union {
 	struct {
-		int address    : 8;
-		int group      : 8;
-		int command    : 8;
-		int type       : 2;
-		int reserved   : 2;
+		int address    : 16;
+		int reserved   : 12;
 		int mode       : 1;
 		int identifier : 3;
 	};

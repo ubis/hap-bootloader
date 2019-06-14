@@ -9,6 +9,7 @@
 #include <string.h>
 #include <boot.h>
 #include <can.h>
+#include <xcp.h>
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/usart.h>
@@ -18,9 +19,6 @@
 
 // unique stm32f1 id 96bit
 #define U_ID_1 (*((unsigned int *) 0x1FFFF7E8))
-
-static header_t g_header;
-static unsigned short g_address;
 
 static void cpu_init(void)
 {
@@ -93,54 +91,73 @@ static unsigned short calc_crc16(const unsigned char *addr, size_t len)
 	return crc;
 }
 
-static void restore_header(void)
+static void set_up_header(unsigned short *addr)
 {
-	g_header.command = COMMAND_BOOT_PERFORM;
-	g_header.group = 1;
-	g_header.address = 1;
+	const size_t id_len = 12;
+	header_t g_header;
+	unsigned char id_arr[id_len];
+
+	// generate address from uid
+	memcpy(id_arr, &U_ID_1, id_len);
+	*addr = calc_crc16(&id_arr[0], id_len);
+
+	// set up can rx header
+	g_header.mode = MODE_BOOT;
+	g_header.reserved = 0;
+	g_header.address = *addr;
+	g_header.identifier = ID_29_BIT;
+	CanSetRxMsgId(g_header.id);
+
+	// set can tx header
+	g_header.address = 0x0101; // 0x01 address; 0x01 group
 	CanSetTxMsgId(g_header.id);
+}
+
+static void send_boot_init(unsigned short *addr)
+{
+	unsigned char buffer[4];
+
+	buffer[0] = XCP_PID_NFY;
+	buffer[1] = XCP_CMD_BOOT_INIT;
+	memcpy(buffer + 2, addr, sizeof(*addr));
+
+	CanTransmitPacket(&buffer[0], sizeof(buffer) / sizeof(buffer[0]));
 }
 
 void CpuStartUserProgramStateHook(unsigned int state)
 {
-	unsigned char nfy_state[1] = { BOOT_FAIL_START };
+	unsigned char buffer[3];
+
+	buffer[0] = XCP_PID_NFY;
+	buffer[1] = XCP_CMD_BOOT_FAIL;
+	buffer[2] = BOOT_FAIL_START;
 
 	switch (state) {
 	case BLT_STATE_CHECKSUM_FAIL:
-		nfy_state[0] = BOOT_FAIL_CHECKSUM;
+		buffer[2] = BOOT_FAIL_CHECKSUM;
 		break;
 	case BLT_STATE_START_HOOK_FAIL:
-		nfy_state[0] = BOOT_FAIL_PRE_START;
+		buffer[2] = BOOT_FAIL_PRE_START;
 		break;
 	}
 
-	// send boot fail
-	g_header.command = COMMAND_BOOT_FAIL;
-	g_header.group = g_address & 0xFF;
-	g_header.address = (g_address & 0xFF00) >> 8;
-	CanSetTxMsgId(g_header.id);
-	CanTransmitPacket(&nfy_state[0], sizeof(nfy_state));
-
-	// restore header
-	restore_header();
+	// send boot fail notification
+	CanTransmitPacket(&buffer[0], sizeof(buffer) / sizeof(buffer[0]));
 }
 
 unsigned char CpuUserProgramStartHook(void)
 {
+	unsigned char buffer[2];
+
 	// Turn off both LEDs
 	gpio_clear(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
 	gpio_clear(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 
+	buffer[0] = XCP_PID_NFY;
+	buffer[1] = XCP_CMD_BOOT_PREPARE;
+
 	// send prepare run application
-	g_header.command = COMMAND_BOOT_PREPARE_LAUNCH;
-	g_header.group = g_address & 0xFF;
-	g_header.address = (g_address & 0xFF00) >> 8;
-	CanSetTxMsgId(g_header.id);
-	CanTransmitPacket(NULL, 0);
-
-	// restore header
-	restore_header();
-
+	CanTransmitPacket(&buffer[0], sizeof(buffer) / sizeof(buffer[0]));
 	return 1;
 }
 
@@ -175,30 +192,13 @@ void CopServiceHook(void)
 
 int main(void)
 {
-	const size_t id_len = 12;
-	unsigned char id_arr[id_len];
+	unsigned short dev_addr;
 
 	// configure clock and peripherals
 	cpu_init();
 
-	// generate address from uid
-	memcpy(id_arr, &U_ID_1, id_len);
-	g_address = calc_crc16(&id_arr[0], id_len);
-	memcpy(id_arr, &g_address, sizeof(g_address));
-
-	// set can rx header
-	g_header.mode = MODE_BOOT;
-	g_header.reserved = 0;
-	g_header.type = 0;
-	g_header.command = COMMAND_BOOT_PERFORM;
-	g_header.group = g_address & 0xFF;
-	g_header.address = (g_address & 0xFF00) >> 8;
-	g_header.identifier = ID_29_BIT;
-	CanSetRxMsgId(g_header.id);
-
-	// set can tx header
-	g_header.command = COMMAND_BOOT_INIT;
-	CanSetTxMsgId(g_header.id);
+	// set up CAN tx/rx header
+	set_up_header(&dev_addr);
 
 	// initialize the bootloader
 	BootInit();
@@ -209,13 +209,9 @@ int main(void)
 	gpio_clear(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
 	gpio_clear(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 
-	ee_printf("Address: %02X\r\n", g_address);
+	ee_printf("Address: %02X\r\n", dev_addr);
 	ee_printf("Sending boot init command...\r\n");
-	CanSetTxMsgId(g_header.id);
-	CanTransmitPacket(&id_arr[0], sizeof(g_address));
-
-	// restore header
-	restore_header();
+	send_boot_init(&dev_addr);
 
 	ee_printf("\r\n");
 	ee_printf("Autoboot in %d seconds...\r\n",
