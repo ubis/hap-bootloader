@@ -1,0 +1,19 @@
+diff --git a/Target/Source/xcp.c b/Target/Source/xcp.c
+index 0cf65995..e2c5e420 100644
+--- a/Target/Source/xcp.c
++++ b/Target/Source/xcp.c
+@@ -589,10 +589,10 @@ static void XcpCmdGetStatus(blt_int8u *data)
+   /* report current resource protection status */
+   xcpInfo.ctoData[2] = xcpInfo.protection;
+ 
+-  /* reset reserved and session configuration id values */
+-  xcpInfo.ctoData[3] = 0;
+-  xcpInfo.ctoData[4] = 0;
+-  xcpInfo.ctoData[5] = 0;
++  /* set bootloader version */
++  xcpInfo.ctoData[3] = BOOT_VERSION_CORE_MAIN;
++  xcpInfo.ctoData[4] = BOOT_VERSION_CORE_MINOR;
++  xcpInfo.ctoData[5] = BOOT_VERSION_CORE_PATCH;
+ 
+   /* set packet length */
+   xcpInfo.ctoLen = 6;
