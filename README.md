@@ -17,7 +17,9 @@ HAP Bootloader contains the following changes:
 * slightly different device identification: generate crc16 from unique STM32's 96bit number;
 * notifying bootloader state due possible hook;
 * increased boot timeout to 5s;
-* switched to libopencm3 in main project(not OpenBLT core) to reduce flash/sram usage.
+* switched to libopencm3 in main project(not OpenBLT core) to reduce flash/sram usage;
+* slightly different XCP status command to show bootloader version;
+* some new custom XCP commands to notify boot init / state.
 
 A few example messages, when no firmware is available:
 ```
