@@ -1,0 +1,66 @@
+diff --git a/openblt/Target/Source/ARMCM3_STM32F1/cpu.c b/openblt/Target/Source/ARMCM3_STM32F1/cpu.c
+index 92cef883..bfafc1ca 100644
+--- a/openblt/Target/Source/ARMCM3_STM32F1/cpu.c
++++ b/openblt/Target/Source/ARMCM3_STM32F1/cpu.c
+@@ -148,6 +148,9 @@ void CpuStartUserProgram(void)
+ #if (BOOT_CONSOLE_UART_ENABLE > 0)
+     ee_printf("Failed to verify checksum!\r\n");
+ #endif
++#if (BOOT_CPU_USER_PROGRAM_START_HOOK > 0)
++    CpuStartUserProgramStateHook(BLT_STATE_CHECKSUM_FAIL);
++#endif
+     return;
+   }
+ #if (BOOT_CPU_USER_PROGRAM_START_HOOK > 0)
+@@ -158,6 +161,9 @@ void CpuStartUserProgram(void)
+ #if (BOOT_CONSOLE_UART_ENABLE > 0)
+     ee_printf("Failed to start user program!\r\n");
+ #endif
++#if (BOOT_CPU_USER_PROGRAM_START_HOOK > 0)
++    CpuStartUserProgramStateHook(BLT_STATE_START_HOOK_FAIL);
++#endif
+     return;
+   }
+ #endif
+diff --git a/openblt/Target/Source/backdoor.c b/openblt/Target/Source/backdoor.c
+index fae4dc1e..e158d9af 100644
+--- a/openblt/Target/Source/backdoor.c
++++ b/openblt/Target/Source/backdoor.c
+@@ -168,6 +168,9 @@ void BackDoorCheck(void)
+ #if (BOOT_CONSOLE_UART_ENABLE > 0)
+         ee_printf("Unable to boot system image!\r\n");
+ #endif
++#if (BOOT_CPU_USER_PROGRAM_START_HOOK > 0)
++        CpuStartUserProgramStateHook(BLT_STATE_START_FAIL);
++#endif
+       }
+     }
+   }
+diff --git a/openblt/Target/Source/boot.h b/openblt/Target/Source/boot.h
+index 82480e85..438ba954 100644
+--- a/openblt/Target/Source/boot.h
++++ b/openblt/Target/Source/boot.h
+@@ -39,6 +39,12 @@
+ #define BOOT_VERSION_CORE_PATCH    (0u)
+ /** \brief Date of the bootloader version. */
+ #define BOOT_VERSION_CORE_DATE      "2018.07"
++/** \brief Bootloader checksum fail state. */
++#define BLT_STATE_CHECKSUM_FAIL    (1u)
++/** \brief Bootloader user program start hook fail state. */
++#define BLT_STATE_START_HOOK_FAIL  (2u)
++/** \brief Bootloader program start fail state. */
++#define BLT_STATE_START_FAIL       (3u)
+ 
+ 
+ /****************************************************************************************
+@@ -74,6 +80,10 @@
+ void BootInit(void);
+ void BootTask(void);
+ 
++#if (BOOT_CPU_USER_PROGRAM_START_HOOK > 0)
++extern void CpuStartUserProgramStateHook(blt_int32u state);
++#endif
++
+ 
+ #endif /* BOOT_H */
+ /*********************************** end of boot.h *************************************/

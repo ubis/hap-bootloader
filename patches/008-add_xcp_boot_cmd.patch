@@ -1,0 +1,35 @@
+diff --git a/openblt/Target/Source/xcp.h b/openblt/Target/Source/xcp.h
+index c56cded5..baf0e644 100644
+--- a/openblt/Target/Source/xcp.h
++++ b/openblt/Target/Source/xcp.h
+@@ -133,6 +133,8 @@
+ #define XCP_PID_RES                 (0xff)
+ /** \brief Error packet identifier. */
+ #define XCP_PID_ERR                 (0xfe)
++/** \brief Command notify packet identified. */
++#define XCP_PID_NFY                 (0xfd)
+ 
+ /* XCP error codes */
+ /** \brief Cmd processor synchronization error code. */
+@@ -161,8 +163,12 @@
+ #define XCP_CMD_GET_STATUS          (0xfd)
+ /** \brief SYNCH command code. */
+ #define XCP_CMD_SYNCH               (0xfc)
++/** \brief BOOT_INIT command code. */
++#define XCP_CMD_BOOT_INIT           (0xfb)
+ /** \brief GET_ID command code. */
+ #define XCP_CMD_GET_ID              (0xfa)
++/** \brief BOOT_PREPARE command code.  */
++#define XCP_CMD_BOOT_PREPARE        (0xf9)
+ /** \brief GET_SEED command code. */
+ #define XCP_CMD_GET_SEED            (0xf8)
+ /** \brief UNLOCK command code. */
+@@ -175,6 +181,8 @@
+ #define XCP_CMD_SHORT_UPLOAD        (0xf4)
+ /** \brief BUILD_CHECKSUM command code. */
+ #define XCP_CMD_BUILD_CHECKSUM      (0xf3)
++/** \brief BOOT_FAIL command code. */
++#define XCP_CMD_BOOT_FAIL           (0xf2)
+ /** \brief DOWNLOAD command code. */
+ #define XCP_CMD_DOWNLOAD            (0xf0)
+ /** \brief DOWNLOAD_MAX command code. */
