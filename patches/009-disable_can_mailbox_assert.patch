@@ -1,0 +1,15 @@
+diff --git a/openblt/Target/Source/ARMCM3_STM32F1/can.c b/openblt/Target/Source/ARMCM3_STM32F1/can.c
+index 4509a89f..af96e3d1 100644
+--- a/openblt/Target/Source/ARMCM3_STM32F1/can.c
++++ b/openblt/Target/Source/ARMCM3_STM32F1/can.c
+@@ -360,9 +360,6 @@ void CanInit(void)
+ ****************************************************************************************/
+   blt_int32u txMsgId = g_txMsgId;
+   blt_int32u timeout;
+ 
+-  /* make sure that transmit mailbox 0 is available */
+-  ASSERT_RT((CANx->TSR&CAN_BIT_TME0) == CAN_BIT_TME0);
+-
+   /* reset all CAN identifier related bits */
+   CANx->sTxMailBox[0].TIR &= CAN_BIT_TXRQ;
+   /* is it a 11-bit standard CAN identifier? */
