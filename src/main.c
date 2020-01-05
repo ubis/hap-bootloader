@@ -32,6 +32,11 @@ static void cpu_init(void)
 	rcc_periph_clock_enable(RCC_GPIOB);
 	rcc_periph_clock_enable(RCC_GPIOC);
 
+	// set all PA/PB/PC pins as input
+	gpio_set_mode(GPIOA, GPIO_MODE_INPUT, GPIO_CNF_INPUT_FLOAT, GPIO_ALL);
+	gpio_set_mode(GPIOB, GPIO_MODE_INPUT, GPIO_CNF_INPUT_FLOAT, GPIO_ALL);
+	gpio_set_mode(GPIOC, GPIO_MODE_INPUT, GPIO_CNF_INPUT_FLOAT, GPIO_ALL);
+
 	// UART TX
 	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
 		      GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO9);
