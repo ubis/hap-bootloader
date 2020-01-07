@@ -56,13 +56,8 @@ static void cpu_init(void)
 	gpio_set_mode(SYSTEM_STATUS_LED_PORT, GPIO_MODE_OUTPUT_50_MHZ,
 		      GPIO_CNF_OUTPUT_PUSHPULL, SYSTEM_STATUS_LED_PIN);
 
-	// Error LED
-	gpio_set_mode(SYSTEM_ERROR_LED_PORT, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, SYSTEM_ERROR_LED_PIN);
-
-	// Turn on both LEDs
+	// Turn on LED
 	gpio_set(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
-	gpio_set(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 
 	// Setup USART
 	usart_set_baudrate(USART1, BOOT_CONSOLE_UART_BAUDRATE);
@@ -154,9 +149,8 @@ unsigned char CpuUserProgramStartHook(void)
 {
 	unsigned char buffer[2];
 
-	// Turn off both LEDs
+	// Turn off LED
 	gpio_clear(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
-	gpio_clear(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 
 	buffer[0] = XCP_PID_NFY;
 	buffer[1] = XCP_CMD_BOOT_PREPARE;
@@ -185,11 +179,9 @@ void CopServiceHook(void)
 	if (!ledOn) {
 		ledOn = 1;
 		gpio_set(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
-		gpio_clear(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 	} else {
 		ledOn = 0;
 		gpio_clear(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
-		gpio_set(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 	}
 
 	nextBlinkEvent = TimerGet() + SYSTEM_LED_BLINK_INTERVAL;
@@ -210,9 +202,8 @@ int main(void)
 
 	ee_printf("\r\n");
 
-	// turn off both LEDs
+	// turn off LED
 	gpio_clear(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
-	gpio_clear(SYSTEM_ERROR_LED_PORT, SYSTEM_ERROR_LED_PIN);
 
 	ee_printf("Address: %02X\r\n", dev_addr);
 	ee_printf("Sending boot init command...\r\n");
