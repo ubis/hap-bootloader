@@ -14,11 +14,14 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/usart.h>
 #include <libopencm3/stm32/crc.h>
+#include <libopencm3/stm32/iwdg.h>
 
 #include "protodef.h"
 
 // unique stm32f1 id 96bit
 #define U_ID_1 (*((unsigned int *) 0x1FFFF7E8))
+
+#define WATCHDOG_PERIOD_MS 5000
 
 static void cpu_init(void)
 {
@@ -68,6 +71,13 @@ static void cpu_init(void)
 	usart_set_flow_control(USART1, USART_FLOWCONTROL_NONE);
 
 	usart_enable(USART1);
+
+	// Setup Watchdog
+	rcc_osc_on(RCC_LSI);
+	rcc_wait_for_osc_ready(RCC_LSI);
+
+	iwdg_set_period_ms(WATCHDOG_PERIOD_MS);
+	iwdg_start();
 }
 
 static unsigned short calc_crc16(const unsigned char *addr, size_t len)
@@ -174,6 +184,8 @@ void CopServiceHook(void)
 	if (TimerGet() < nextBlinkEvent) {
 		return;
 	}
+
+	iwdg_reset();
 
 	// toggle the LED state
 	if (!ledOn) {
