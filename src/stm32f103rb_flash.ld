@@ -40,7 +40,8 @@ MEMORY
     /* reserve space for the OpenBLT bootloader which occupies the first part
      * of flash.
      */
-    ROM  (rx) : ORIGIN = 0x08000000, LENGTH = 8K
+    ROM  (rx) : ORIGIN = 0x08000000, LENGTH = 0x1FF4 /* 8180 Bytes */
+    BOOT (r)  : ORIGIN = 0x08001FF4, LENGTH = 0x000C /*   12 Bytes */
     RAM (rwx) : ORIGIN = 0x20000000, LENGTH = 20K
 }
 
@@ -105,6 +106,16 @@ SECTIONS
 	{
 		*(.ARM.extab* .gnu.linkonce.armextab.*)
 	} > ROM
+
+	.boot_version :
+	{
+	KEEP(*(.boot_version*));
+	} > BOOT
+
+	.boot_date :
+	{
+	KEEP(*(.boot_date*));
+	} > BOOT
 
 	__exidx_start = .;
 	.ARM.exidx :

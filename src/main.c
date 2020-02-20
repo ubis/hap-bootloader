@@ -23,6 +23,16 @@
 
 #define WATCHDOG_PERIOD_MS 5000
 
+uint8_t __attribute__((section(".boot_version"))) g_boot_version[4] = {
+	BOOT_VERSION_CORE_MAIN,
+	BOOT_VERSION_CORE_MINOR,
+	BOOT_VERSION_CORE_PATCH
+};
+
+uint8_t __attribute__((section(".boot_date"))) g_boot_date[8] = {
+	BOOT_VERSION_CORE_DATE
+};
+
 static void cpu_init(void)
 {
 	rcc_clock_setup_in_hse_8mhz_out_72mhz();
