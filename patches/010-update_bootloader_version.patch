@@ -1,0 +1,11 @@
+--- a/openblt/Target/Source/boot.h	2021-02-20 15:10:14.074678613 +0200
++++ b/openblt/Target/Source/boot.h	2021-02-20 15:10:49.127694033 +0200
+@@ -36,7 +36,7 @@
+ /** \brief Minor version number of the bootloader core. */
+ #define BOOT_VERSION_CORE_MINOR    (6u)
+ /** \brief Patch number of the bootloader core. */
+-#define BOOT_VERSION_CORE_PATCH    (0u)
++#define BOOT_VERSION_CORE_PATCH    (1u)
+ /** \brief Date of the bootloader version. */
+ #define BOOT_VERSION_CORE_DATE      "2018.07"
+ /** \brief Bootloader checksum fail state. */
