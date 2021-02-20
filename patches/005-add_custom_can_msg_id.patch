@@ -94,3 +94,71 @@ index d0920eed..72550c17 100644
  #endif /* BOOT_COM_CAN_ENABLE > 0 */
  
  
+diff --git a/openblt/Target/Source/xcp.c b/Target/Source/xcp.c
+index 0cf65995..61dc5072 100644
+--- a/openblt/Target/Source/xcp.c
++++ b/openblt/Target/Source/xcp.c
+@@ -78,6 +78,7 @@ static void XcpCmdSetMta(blt_int8u *data);
+ static void XcpCmdUpload(blt_int8u *data);
+ static void XcpCmdShortUpload(blt_int8u *data);
+ static void XcpCmdBuildCheckSum(blt_int8u *data);
++static void XcpCmdSetTxId(blt_int8u *data);
+ #if (XCP_SEED_KEY_PROTECTION_EN == 1)
+ static void XcpCmdGetSeed(blt_int8u *data);
+ static void XcpCmdUnlock(blt_int8u *data);
+@@ -99,6 +99,7 @@ static void XcpCmdProgramReset(blt_int8u *data);
+ static void XcpCmdProgramPrepare(blt_int8u *data);
+ #endif
+ 
++extern void CanSetTxMsgId(blt_int32u id);
+ 
+ /****************************************************************************************
+ * Hook functions
+@@ -237,6 +238,9 @@ void XcpPacketReceived(blt_int8u *data, blt_int8u len)
+       case XCP_CMD_BUILD_CHECKSUM:
+         XcpCmdBuildCheckSum(data);
+         break;
++      case XCP_CMD_SET_TX_ID:
++        XcpCmdSetTxId(data);
++        break;
+       case XCP_CMD_GET_ID:
+         XcpCmdGetId(data);
+         break;
+@@ -911,6 +915,24 @@ static void XcpCmdBuildCheckSum(blt_int8u *data)
+   xcpInfo.ctoLen = 8;
+ } /*** end of XcpCmdBuildCheckSum ***/
+ 
++/************************************************************************************//**
++** \brief     XCP command processor function which handles the SET TX ID command as
++**            defined by the protocol.
++** \param     data Pointer to a byte buffer with the packet data.
++** \return    none
++**
++****************************************************************************************/
++static void XcpCmdSetTxId(blt_int8u *data)
++{
++  /* set packet id to command response packet */
++  xcpInfo.ctoData[0] = XCP_PID_RES;
++
++  /* update transmit id */
++  CanSetTxMsgId(*(blt_int32u *)&data[4]);
++
++  /* set packet length */
++  xcpInfo.ctoLen = 1;
++} /*** end of XcpCmdSetTxId ***/
+ 
+ #if (XCP_SEED_KEY_PROTECTION_EN == 1)
+ /************************************************************************************//**
+diff --git a/openblt/Target/Source/xcp.h b/Target/Source/xcp.h
+index c56cded5..af10c81b 100644
+--- a/openblt/Target/Source/xcp.h
++++ b/openblt/Target/Source/xcp.h
+@@ -193,6 +193,8 @@
+ #define XCP_CMD_PROGRAM_RESET       (0xcf)
+ /** \brief PROGRAM_PREPARE command code. */
+ #define XCP_CMD_PROGRAM_PREPARE     (0xcc)
++/** \brief SET TX ID command code. */
++#define XCP_CMD_SET_TX_ID           (0xcd)
+ /** \brief PROGRAM_MAX command code. */
+ #define XCP_CMD_PROGRAM_MAX         (0xc9)
+ 

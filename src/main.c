@@ -20,6 +20,7 @@
 
 // unique stm32f1 id 96bit
 #define U_ID_1 (*((unsigned int *) 0x1FFFF7E8))
+#define U_ID_LEN 12
 
 #define WATCHDOG_PERIOD_MS 5000
 
@@ -65,13 +66,6 @@ static void cpu_init(void)
 	gpio_set_mode(GPIOA, GPIO_MODE_OUTPUT_50_MHZ,
 		      GPIO_CNF_OUTPUT_ALTFN_PUSHPULL, GPIO12);
 
-	// Status LED
-	gpio_set_mode(SYSTEM_STATUS_LED_PORT, GPIO_MODE_OUTPUT_50_MHZ,
-		      GPIO_CNF_OUTPUT_PUSHPULL, SYSTEM_STATUS_LED_PIN);
-
-	// Turn on LED
-	gpio_set(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
-
 	// Setup USART
 	usart_set_baudrate(USART1, BOOT_CONSOLE_UART_BAUDRATE);
 	usart_set_databits(USART1, BOOT_CONSOLE_UART_DATA_BITS);
@@ -111,35 +105,32 @@ static unsigned short calc_crc16(const unsigned char *addr, size_t len)
 	return crc;
 }
 
-static void set_up_header(unsigned short *addr)
+static void set_up_header(unsigned short *addr, unsigned char *ext)
 {
-	const size_t id_len = 12;
 	header_t g_header;
-	unsigned char id_arr[id_len];
 
 	// generate address from uid
-	memcpy(id_arr, &U_ID_1, id_len);
-	*addr = calc_crc16(&id_arr[0], id_len);
+	*addr = calc_crc16((const unsigned char *)&U_ID_1, U_ID_LEN);
+	*ext = U_ID_1 & 0xFF;
 
 	// set up can rx header
 	g_header.mode = MODE_BOOT;
 	g_header.reserved = 0;
 	g_header.address = *addr;
+	g_header.uid_part = *ext;
 	g_header.identifier = ID_29_BIT;
 	CanSetRxMsgId(g_header.id);
 
 	// set can tx header
-	g_header.address = 0x0101; // 0x01 address; 0x01 group
 	CanSetTxMsgId(g_header.id);
 }
 
-static void send_boot_init(unsigned short *addr)
+static void send_boot_init(void)
 {
-	unsigned char buffer[4];
+	unsigned char buffer[2];
 
 	buffer[0] = XCP_PID_NFY;
 	buffer[1] = XCP_CMD_BOOT_INIT;
-	memcpy(buffer + 2, addr, sizeof(*addr));
 
 	CanTransmitPacket(&buffer[0], sizeof(buffer) / sizeof(buffer[0]));
 }
@@ -169,9 +160,6 @@ unsigned char CpuUserProgramStartHook(void)
 {
 	unsigned char buffer[2];
 
-	// Turn off LED
-	gpio_clear(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
-
 	buffer[0] = XCP_PID_NFY;
 	buffer[1] = XCP_CMD_BOOT_PREPARE;
 
@@ -187,49 +175,27 @@ void CopInitHook(void)
 
 void CopServiceHook(void)
 {
-	static unsigned char ledOn = 0;
-	static unsigned int nextBlinkEvent = 0;
-
-	// check for blink event
-	if (TimerGet() < nextBlinkEvent) {
-		return;
-	}
-
 	iwdg_reset();
-
-	// toggle the LED state
-	if (!ledOn) {
-		ledOn = 1;
-		gpio_set(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
-	} else {
-		ledOn = 0;
-		gpio_clear(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
-	}
-
-	nextBlinkEvent = TimerGet() + SYSTEM_LED_BLINK_INTERVAL;
 }
 
 int main(void)
 {
 	unsigned short dev_addr;
+	unsigned char ext_part;
 
 	// configure clock and peripherals
 	cpu_init();
 
 	// set up CAN tx/rx header
-	set_up_header(&dev_addr);
+	set_up_header(&dev_addr, &ext_part);
 
 	// initialize the bootloader
 	BootInit();
 
 	ee_printf("\r\n");
-
-	// turn off LED
-	gpio_clear(SYSTEM_STATUS_LED_PORT, SYSTEM_STATUS_LED_PIN);
-
-	ee_printf("Address: %02X\r\n", dev_addr);
+	ee_printf("Address: %02X%04X\r\n", ext_part, dev_addr);
 	ee_printf("Sending boot init command...\r\n");
-	send_boot_init(&dev_addr);
+	send_boot_init();
 
 	ee_printf("\r\n");
 	ee_printf("Autoboot in %d seconds...\r\n",

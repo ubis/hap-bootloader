@@ -145,20 +145,4 @@
  */
 #define BOOT_BACKDOOR_ENTRY_TIMEOUT_MS (5000)
 
-/*******************************************************************************
-*   L E D   C O N F I G U R A T I O N
-*******************************************************************************/
-/* Set board-specific status led port and pin value and blinking
- * interval. Interval can be set by changing SYSTEM_LED_BLINK_INTERVAL.
- * Status led port can be configured by setting SYSTEM_STATUS_LED_PORT and
- * pin by setting SYSTEM_STATUS_LED_PIN.
- */
-
-// Configure led blink interval ms
-#define SYSTEM_LED_BLINK_INTERVAL 	(100)
-// Configure status led port
-#define SYSTEM_STATUS_LED_PORT 		(GPIOC)
-// Configure status led pin
-#define SYSTEM_STATUS_LED_PIN 		(GPIO13)
-
 #endif

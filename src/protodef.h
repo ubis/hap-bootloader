@@ -27,7 +27,8 @@ typedef enum {
 typedef union {
 	struct {
 		int address    : 16;
-		int reserved   : 12;
+		int uid_part   : 8;
+		int reserved   : 4;
 		int mode       : 1;
 		int identifier : 3;
 	};
