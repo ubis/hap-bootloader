@@ -196,7 +196,7 @@ index 92cef883..4f17d8c1 100644
    void (*pProgResetHandler)(void);
  
 +#if (BOOT_CONSOLE_UART_ENABLE > 0)
-+  ee_printf("Preparing to boot...\n\r\n");
++  ee_printf("\r\n\r\nPreparing to boot...\n\r\n");
 +#endif
 +
    /* check if a user program is present by verifying the checksum */
@@ -237,3 +237,68 @@ index 92cef883..4f17d8c1 100644
    /* start the user program by activating its reset interrupt service routine */
    pProgResetHandler();
  } /*** end of CpuStartUserProgram ***/
+diff --git a/openblt/Target/Source/xcp.c b/Target/Source/xcp.c
+index 0cf65995..4b789938 100644
+--- a/openblt/Target/Source/xcp.c
++++ b/openblt/Target/Source/xcp.c
+@@ -539,6 +539,10 @@ static void XcpCmdConnect(blt_int8u *data)
+ 
+   /* reinit the NVM driver because a new firmware update is about the start */
+   NvmInit();
++
++#if (BOOT_CONSOLE_UART_ENABLE > 0)
++  ee_printf("Received XCP command connect!\r\n");
++#endif
+ } /*** end of XcpCmdConnect ***/
+ 
+ 
+@@ -666,6 +670,9 @@ static void XcpCmdSetMta(blt_int8u *data)
+ 
+   /* set packet length */
+   xcpInfo.ctoLen = 1;
++#if (BOOT_CONSOLE_UART_ENABLE > 0)
++  ee_printf(" ");
++#endif
+ } /*** end of XcpCmdSetMta ***/
+ 
+ 
+@@ -1151,6 +1158,9 @@ static void XcpCmdProgramStart(blt_int8u *data)
+ 
+   /* set packet length */
+   xcpInfo.ctoLen = 7;
++#if (BOOT_CONSOLE_UART_ENABLE > 0)
++  ee_printf("Received XCP command program start!\r\n");
++#endif
+ } /*** end of XcpCmdProgramStart ***/
+ 
+ 
+@@ -1246,6 +1256,9 @@ static void XcpCmdProgram(blt_int8u *data)
+ 
+   /* post increment the mta */
+   xcpInfo.mta += data[1];
++#if (BOOT_CONSOLE_UART_ENABLE > 0)
++  ee_printf("#");
++#endif
+ } /*** end of XcpCmdProgram ***/
+ 
+ 
+@@ -1281,6 +1294,9 @@ static void XcpCmdProgramClear(blt_int8u *data)
+ 
+   /* set packet length */
+   xcpInfo.ctoLen = 1;
++#if (BOOT_CONSOLE_UART_ENABLE > 0)
++  ee_printf("Received XCP command program clear!\r\n");
++#endif
+ } /*** end of XcpCmdProgramClear ***/
+ 
+ 
+@@ -1316,6 +1332,9 @@ static void XcpCmdProgramReset(blt_int8u *data)
+ 
+   /* set packet length */
+   xcpInfo.ctoLen = 1;
++#if (BOOT_CONSOLE_UART_ENABLE > 0)
++  ee_printf("Received XCP command program reset!\r\n");
++#endif
+ } /*** end of XcpCmdProgramReset ***/
+ 
+ 
