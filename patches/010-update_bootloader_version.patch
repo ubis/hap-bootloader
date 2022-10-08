@@ -5,7 +5,7 @@
  #define BOOT_VERSION_CORE_MINOR    (6u)
  /** \brief Patch number of the bootloader core. */
 -#define BOOT_VERSION_CORE_PATCH    (0u)
-+#define BOOT_VERSION_CORE_PATCH    (1u)
++#define BOOT_VERSION_CORE_PATCH    (2u)
  /** \brief Date of the bootloader version. */
  #define BOOT_VERSION_CORE_DATE      "2018.07"
  /** \brief Bootloader checksum fail state. */
