@@ -1,0 +1,46 @@
+--- a/openblt/Target/Source/ARMCM3_STM32F1/can.c	2023-07-03 08:32:47.217995695 +0300
++++ b/openblt/Target/Source/ARMCM3_STM32F1/can.c	2023-07-03 08:34:30.029034754 +0300
+@@ -43,6 +43,8 @@
+ /** \brief Timeout for transmitting a CAN message in milliseconds. */
+ #define CAN_MSG_TX_TIMEOUT_MS          (50u)
+ 
++/** \brief Timeout for being inactive in milliseconds. */
++#define CAN_INACTIVE_TIMEOUT_MS          (5000u)
+ 
+ /****************************************************************************************
+ * Type definitions
+@@ -424,6 +424,7 @@
+ ****************************************************************************************/
+ blt_bool CanReceivePacket(blt_int8u *data, blt_int8u *len)
+ {
++  static blt_int32u timeout;
+   blt_int32u rxMsgId;
+   blt_bool   result = BLT_FALSE;
+ 
+@@ -445,6 +446,8 @@
+     /* is this the packet identifier */
+     if (rxMsgId == g_rxMsgId)
+     {
++      /* reset inactive timeout */
++      timeout = 0;
+       result = BLT_TRUE;
+       *len = ((blt_int8u)(CANx->sFIFOMailBox[0].RDTR)) & 0x0fu;
+       /* store the received packet data */
+@@ -459,6 +462,17 @@
+     }
+     /* release FIFO0 */
+     CANx->RF0R |= CAN_BIT_RFOM0;
++  } else {
++    if (!timeout) {
++      timeout = TimerGet() + CAN_INACTIVE_TIMEOUT_MS;
++    }
++    if (TimerGet() > timeout) {
++      /* transmit alive message */
++      blt_int8u buffer[2] = { XCP_PID_NFY, XCP_CMD_BOOT_INIT };
++      CanTransmitPacket(buffer, 2);
++      /* reset inactive timer */
++      timeout = 0;
++    }
+   }
+   return result;
+ } /*** end of CanReceivePacket ***/
