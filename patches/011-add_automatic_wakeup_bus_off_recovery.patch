@@ -1,0 +1,23 @@
+--- a/openblt/Target/Source/ARMCM3_STM32F1/can.c	2023-07-03 08:02:28.034942785 +0300
++++ b/openblt/Target/Source/ARMCM3_STM32F1/can.c	2023-07-03 08:05:01.972987342 +0300
+@@ -111,6 +111,10 @@
+ #define CAN_BIT_INAK     ((blt_int32u)0x00000001)
+ /** \brief Sleep mode request bit. */
+ #define CAN_BIT_SLEEP    ((blt_int32u)0x00000002)
++/** \brief Automatic wakeup mode bit. */
++#define CAN_BIT_AWUM     ((blt_int32u)0x00000020)
++/** \brief Automatic bus-off management bit. */
++#define CAN_BIT_ABOM     ((blt_int32u)0x00000040)
+ /** \brief Filter 0 selection bit. */
+ #define CAN_BIT_FILTER0  ((blt_int32u)0x00000001)
+ /** \brief Filter init mode bit. */
+@@ -306,6 +310,9 @@
+     }
+   }
+ 
++  /* enable automatic wakeup and bus-off recovery modes */
++  CANx->MCR |= CAN_BIT_AWUM | CAN_BIT_ABOM;
++
+   /* determine the reception filter mask and id values such that it only leaves one
+    * CAN identifier through (g_rxMsgId).
+    */
