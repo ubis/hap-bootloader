@@ -20,6 +20,8 @@ HAP Bootloader contains the following changes:
 * switched to libopencm3 in main project(not OpenBLT core) to reduce flash/sram usage;
 * slightly different XCP status command to show bootloader version;
 * some new custom XCP commands to notify boot init / state.
+* inactive timer notifications - when device does not receive anything, it will send periodic "alive" messages
+* automatic bus-off recovery
 
 A few example messages, when no firmware is available:
 ```
